@@ -320,11 +320,13 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
 
 // ✅ Set this to your Worker endpoint URL (recommended)
 // Example: "https://mexc-btc-logger.yourname.workers.dev"
-const LOG_ENDPOINT = "PASTE_WORKER_URL_HERE";
+const LOG_ENDPOINT = "https://mexc-btc-logger.mariappan-siddan.workers.dev/log";
+
 
 // MEXC Futures (Contract) endpoints
 const MEXC_WS  = "wss://contract.mexc.com/edge";
-const MEXC_REST_BASE = "https://api.mexc.com/api/v1/contract";
+const MEXC_REST_BASE = "https://mexc-btc-logger.mariappan-siddan.workers.dev";
+
 const SYMBOL = "BTC_USDT";
 const WS_INTERVAL = "Min1";   // WS: Min1
 const REST_INTERVAL = "Min1"; // REST: Min1
@@ -812,7 +814,8 @@ async function warmupREST(limit=220){
   const nowSec = Math.floor(Date.now()/1000);
   const end = nowSec;
   const start = nowSec - (limit * 60);
-  const url = `${MEXC_REST_BASE}/kline/${SYMBOL}?interval=${REST_INTERVAL}&start=${start}&end=${end}`;
+  const url = `${MEXC_REST_BASE}/kline?symbol=${encodeURIComponent(SYMBOL)}&interval=${encodeURIComponent(REST_INTERVAL)}&start=${start}&end=${end}`;
+
 
   restStateEl.textContent = "Loading…";
   footerEl.textContent = `Engine: REST ${url}`;
