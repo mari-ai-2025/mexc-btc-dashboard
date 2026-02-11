@@ -9,7 +9,6 @@
   --bg:#0b0f14;
   --ui:#0f1620;
   --card:rgba(255,255,255,0.03);
-  --br:rgba(255,255,255,0.10);
   --fg:#e8eef7;
   --muted:#9aa6b2;
   --up:#22c55e;
@@ -19,12 +18,21 @@
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
-.container{min-height:100vh;display:flex;flex-direction:column}
+
+/* ✅ Viewport-first layout (chart prominent, less scroll) */
+.container{
+  height:100vh;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  gap:10px;
+}
+
 .header{
   background:linear-gradient(180deg,var(--ui),var(--bg));
   border-bottom:1px solid rgba(255,255,255,0.08);
-  padding:10px 12px 12px;
+  padding:10px 12px 8px;
 }
+
 .topline{
   max-width:min(1500px,100%);
   margin:0 auto;
@@ -32,19 +40,31 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
 }
 .symbol{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .updated{font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;white-space:nowrap}
-.price-row{display:flex;justify-content:center;align-items:baseline;gap:10px;margin:10px 0 12px}
-.price{font-size:clamp(46px,6.6vw,108px);font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
-.arrow{font-size:clamp(30px,4.8vw,86px);font-weight:900;line-height:1}
+
+.price-row{
+  display:flex;justify-content:center;align-items:baseline;gap:10px;
+  margin:8px 0 8px;
+}
+.price{
+  font-size:clamp(40px,5.2vw,88px); /* ✅ slightly smaller = more chart space */
+  font-weight:900;line-height:1;font-variant-numeric:tabular-nums
+}
+.arrow{font-size:clamp(26px,3.8vw,70px);font-weight:900;line-height:1}
 .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
 
-.topgrid{
-  max-width:min(1500px,100%);
+.main{
+  width:min(1500px,calc(100vw - 24px));
   margin:0 auto;
+  padding:0 12px;
+  min-height:0; /* important */
   display:grid;
   grid-template-columns: 380px 1fr;
   gap:10px;
 }
-@media (max-width:980px){ .topgrid{grid-template-columns:1fr} }
+@media (max-width:980px){
+  .container{ height:auto; min-height:100vh; grid-template-rows:auto auto auto; }
+  .main{ grid-template-columns:1fr; }
+}
 
 .widget{
   border:1px solid rgba(255,255,255,0.08);
@@ -57,6 +77,13 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
 .wbody{display:flex;flex-direction:column;gap:6px;font-size:13px}
 .wrow{display:flex;justify-content:space-between;gap:10px}
 .k{color:var(--muted)} .v{font-weight:900}
+
+.leftCol{
+  display:flex;flex-direction:column;gap:10px;
+  overflow:auto;
+  min-height:0;
+}
+@media (max-width:980px){ .leftCol{ overflow:visible; } }
 
 .tagrow{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .tag{
@@ -77,12 +104,18 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
   border-radius:14px;
   padding:10px 12px;
   overflow:hidden;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
 }
 .chartHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
 .chartTitle{font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)}
 #cv{
   width:100%;
-  height:360px;
+  height:100%;
+  flex:1;
+  min-height:460px;              /* ✅ big chart */
+  max-height:calc(100vh - 340px);/* ✅ keeps in viewport */
   display:block;
   border-radius:12px;
   background:rgba(0,0,0,0.18);
@@ -93,12 +126,13 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
 #cv:active{cursor:grabbing}
 .notechips{margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 .notechips .chip{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.18)}
-@media (max-width:520px){ .notechips{display:none} #cv{height:420px} }
+@media (max-width:520px){ .notechips{display:none} #cv{min-height:520px} }
 
+/* ✅ Signal panel moved up + collapsible */
 .section{
   width:min(1500px,calc(100vw - 24px));
-  margin:12px auto 16px;
-  padding:0 12px;
+  margin:0 auto;
+  padding:0 12px 10px;
 }
 .panel{
   background:rgba(18,27,38,0.92);
@@ -147,9 +181,22 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
 .mini .row{display:flex;justify-content:space-between;gap:10px;font-size:13px}
 .mini .row b{font-weight:1000}
 
+.btn{
+  border:1px solid rgba(255,255,255,0.14);
+  background:rgba(0,0,0,0.25);
+  color:var(--fg);
+  border-radius:10px;
+  padding:8px 10px;
+  font-weight:900;
+  cursor:pointer;
+}
+.btn:active{transform:translateY(1px)}
+.btnSmall{padding:6px 10px;border-radius:999px;font-size:12px;color:var(--muted);font-weight:800}
+
 .footer{
   width:min(1500px,calc(100vw - 24px));
-  margin:0 auto 18px;padding:0 12px;
+  margin:0 auto;
+  padding:6px 12px 10px;
   color:var(--muted);font-size:12px;text-align:center;
 }
 </style>
@@ -171,68 +218,75 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
       <div id="price" class="price flat">—</div>
       <div id="arrow" class="arrow flat">●</div>
     </div>
+  </div>
 
-    <div class="topgrid">
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div class="widget">
-          <div class="wtitle">Market</div>
-          <div class="wbody">
-            <div class="wrow"><span class="k">Last</span><span class="v" id="last">—</span></div>
-            <div class="wrow"><span class="k">Δ 1m</span><span class="v" id="chg1m">—</span></div>
-            <div class="wrow"><span class="k">Δ 3m</span><span class="v" id="chg3m">—</span></div>
-            <div class="wrow"><span class="k">Δ 5m</span><span class="v" id="chg5m">—</span></div>
-            <div class="wrow"><span class="k">Δ 10m</span><span class="v" id="chg10m">—</span></div>
-          </div>
-        </div>
-
-        <div class="widget">
-          <div class="wtitle">Engine</div>
-          <div class="wbody">
-            <div class="wrow"><span class="k">WS</span><span class="v" id="wsState">—</span></div>
-            <div class="wrow"><span class="k">REST</span><span class="v" id="restState">—</span></div>
-            <div class="wrow"><span class="k">Last Close</span><span class="v" id="lastClose">—</span></div>
-            <div class="wrow"><span class="k">Logger</span><span class="v" id="logState">—</span></div>
-          </div>
-        </div>
-
-        <div class="widget">
-          <div class="wtitle">Active Trade</div>
-          <div class="wbody">
-            <div class="wrow"><span class="k">State</span><span class="v" id="tState">—</span></div>
-            <div class="wrow"><span class="k">Dir</span><span class="v" id="tDir">—</span></div>
-            <div class="wrow"><span class="k">Entry (C0)</span><span class="v" id="tEntry">—</span></div>
-            <div class="wrow"><span class="k">End (C10)</span><span class="v" id="tEnd">—</span></div>
-          </div>
+  <!-- ✅ MAIN ROW (left panels + big chart) -->
+  <div class="main">
+    <div class="leftCol">
+      <div class="widget">
+        <div class="wtitle">Market</div>
+        <div class="wbody">
+          <div class="wrow"><span class="k">Last</span><span class="v" id="last">—</span></div>
+          <div class="wrow"><span class="k">Δ 1m</span><span class="v" id="chg1m">—</span></div>
+          <div class="wrow"><span class="k">Δ 3m</span><span class="v" id="chg3m">—</span></div>
+          <div class="wrow"><span class="k">Δ 5m</span><span class="v" id="chg5m">—</span></div>
+          <div class="wrow"><span class="k">Δ 10m</span><span class="v" id="chg10m">—</span></div>
         </div>
       </div>
 
-      <div class="chart">
-        <div class="chartHead">
-          <div class="chartTitle">Chart • 1m • EMA9/21 + KAMA • C0/C10 markers</div>
-          <div class="tagrow">
-            <span class="tag neu" id="trendTag">Trend: <b>—</b></span>
-            <span class="tag neu" id="setupTag">Setup: <b>—</b></span>
-            <span class="tag neu">Drag: <b>Pan</b> • Wheel: <b>Zoom</b> • Dbl-click: <b>Reset</b></span>
-          </div>
+      <div class="widget">
+        <div class="wtitle">Engine</div>
+        <div class="wbody">
+          <div class="wrow"><span class="k">WS</span><span class="v" id="wsState">—</span></div>
+          <div class="wrow"><span class="k">REST</span><span class="v" id="restState">—</span></div>
+          <div class="wrow"><span class="k">Last Close</span><span class="v" id="lastClose">—</span></div>
+          <div class="wrow"><span class="k">Logger</span><span class="v" id="logState">—</span></div>
         </div>
-        <canvas id="cv"></canvas>
-        <div class="notechips">
-          <span class="chip">Right pad: 30%</span>
-          <span class="chip">Entry only on closed candle</span>
-          <span class="chip">C10 settles after 10 closed candles</span>
+      </div>
+
+      <div class="widget">
+        <div class="wtitle">Active Trade</div>
+        <div class="wbody">
+          <div class="wrow"><span class="k">State</span><span class="v" id="tState">—</span></div>
+          <div class="wrow"><span class="k">Dir</span><span class="v" id="tDir">—</span></div>
+          <div class="wrow"><span class="k">Entry (C0)</span><span class="v" id="tEntry">—</span></div>
+          <div class="wrow"><span class="k">End (C10)</span><span class="v" id="tEnd">—</span></div>
         </div>
+      </div>
+    </div>
+
+    <div class="chart">
+      <div class="chartHead">
+        <div class="chartTitle">Chart • 1m • EMA9/21 + KAMA • C0/C10 markers</div>
+        <div class="tagrow">
+          <span class="tag neu" id="trendTag">Trend: <b>—</b></span>
+          <span class="tag neu" id="setupTag">Setup: <b>—</b></span>
+          <span class="tag neu">Drag: <b>Pan</b> • Wheel: <b>Zoom</b> • Dbl-click: <b>Reset</b></span>
+        </div>
+      </div>
+
+      <canvas id="cv"></canvas>
+
+      <div class="notechips">
+        <span class="chip">Right pad: 30%</span>
+        <span class="chip">Entry only on closed candle</span>
+        <span class="chip">C10 settles after 10 closed candles</span>
       </div>
     </div>
   </div>
 
+  <!-- ✅ SIGNAL PANEL (moved up + collapsible) -->
   <div class="section">
     <div class="panel">
       <div class="panelHead">
         <div class="panelTitle">1m Trend + Signal (Close-Only)</div>
-        <div class="tag neu" id="pill">Warming…</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span class="btnSmall tag neu" id="pill">Warming…</span>
+          <button class="btn" id="togglePanel">Collapse</button>
+        </div>
       </div>
 
-      <div class="panelBody">
+      <div class="panelBody" id="panelBody">
         <div class="grid2">
           <div class="card">
             <div id="trendBox" class="big mid">
@@ -289,6 +343,9 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
                 <div class="t">Logger</div>
                 <div class="row"><span class="k">Endpoint</span><b id="logEp">—</b></div>
                 <div class="row"><span class="k">Last</span><b id="logLast">—</b></div>
+                <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+                  <button class="btn" id="logTestBtn">Log Test</button>
+                </div>
               </div>
               <div class="mini">
                 <div class="t">Engine Info</div>
@@ -307,56 +364,45 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
     </div>
   </div>
 
-  <div class="footer" id="footer">
-    Engine: booting…
-  </div>
+  <div class="footer" id="footer">Engine: booting…</div>
 
 </div>
 
 <script>
 /* =========================================================
-   CONFIG (YOU EDIT THESE)
+   CONFIG
 ========================================================= */
-
-// ✅ Set this to your Worker endpoint URL (recommended)
-// Example: "https://mexc-btc-logger.yourname.workers.dev"
 const LOG_ENDPOINT = "https://mexc-btc-logger.mariappan-siddan.workers.dev/log";
 
-
-// MEXC Futures (Contract) endpoints
 const MEXC_WS  = "wss://contract.mexc.com/edge";
 const MEXC_REST_BASE = "https://mexc-btc-logger.mariappan-siddan.workers.dev";
 
 const SYMBOL = "BTC_USDT";
-const WS_INTERVAL = "Min1";   // WS: Min1
-const REST_INTERVAL = "Min1"; // REST: Min1
+const WS_INTERVAL = "Min1";
+const REST_INTERVAL = "Min1";
 
-// Strategy params (Mode C-ish, close-only)
 const EMA_FAST = 9;
 const EMA_SLOW = 21;
 
-// KAMA
 const KAMA_LEN = 10;
-const KAMA_FAST = 2;  // fast smoothing
-const KAMA_SLOW = 30; // slow smoothing
+const KAMA_FAST = 2;
+const KAMA_SLOW = 30;
 
-// Filters
 const VOLZ_LEN = 50;
-const MIN_VOLZ = -0.10;     // allow slightly below mean
-const MAX_STRETCH_PCT = 0.35; // abs(close - EMA9) % cap to avoid chasing
+const MIN_VOLZ = -0.10;
+const MAX_STRETCH_PCT = 0.35;
 
-// Pullback-break relaxed (still structured, EMA aligned)
-const PB_LOOKBACK = 6;     // recent swing window
-const PB_BODY_MAX = 0.65;  // allow small-to-medium body
-const BREAK_WITHIN = 2;    // break within next 2 candles after pullback marked
+const PB_LOOKBACK = 6;
+const PB_BODY_MAX = 0.65;
+const BREAK_WITHIN = 2;
 
-// Trade outcome
-const C10_OFFSET = 10;     // C0 -> C10
+const C10_OFFSET = 10;
 
 /* =========================================================
    UI refs
 ========================================================= */
 const $ = (id)=>document.getElementById(id);
+
 const priceEl = $("price");
 const arrowEl = $("arrow");
 const timeEl = $("time");
@@ -406,6 +452,10 @@ const tDirEl = $("tDir");
 const tEntryEl = $("tEntry");
 const tEndEl = $("tEnd");
 
+const togglePanelBtn = $("togglePanel");
+const panelBodyEl = $("panelBody");
+const logTestBtn = $("logTestBtn");
+
 /* =========================================================
    Helpers
 ========================================================= */
@@ -438,37 +488,67 @@ function setBox(box, type){
 }
 
 /* =========================================================
-   Logger (to Worker)
+   Collapsible signal panel
 ========================================================= */
-logEpEl.textContent = LOG_ENDPOINT.includes("PASTE_") ? "NOT SET" : "SET";
+let panelCollapsed = false;
+togglePanelBtn.addEventListener("click", ()=>{
+  panelCollapsed = !panelCollapsed;
+  panelBodyEl.style.display = panelCollapsed ? "none" : "block";
+  togglePanelBtn.textContent = panelCollapsed ? "Expand" : "Collapse";
+  setTimeout(resize, 30);
+});
+
+/* =========================================================
+   Logger (to Worker) + test button
+========================================================= */
+logEpEl.textContent = LOG_ENDPOINT ? "SET" : "NOT SET";
 symEl.textContent = SYMBOL;
 
 async function logEvent(payload){
-  if (!LOG_ENDPOINT || LOG_ENDPOINT.includes("PASTE_")) {
-    logStateEl.textContent = "LOG_ENDPOINT not set";
-    return;
+  if (!LOG_ENDPOINT) {
+    logStateEl.textContent = "Disabled";
+    return { ok:false, error:"LOG_ENDPOINT missing" };
   }
+  const t0 = performance.now();
   try{
     const r = await fetch(LOG_ENDPOINT, {
       method:"POST",
       headers: {"Content-Type":"application/json"},
       body: JSON.stringify(payload)
     });
-    const text = await r.text();
-    logStateEl.textContent = r.ok ? "OK" : ("HTTP " + r.status);
-    logLastEl.textContent = istTimeStr();
-    // If your Worker returns JSON, you can parse it; keeping it safe:
-    // console.log("logEvent resp:", text);
+    const j = await r.json().catch(async()=>({ ok:false, error: await r.text() }));
+    const ms = Math.round(performance.now() - t0);
+
+    logStateEl.textContent = (r.ok && j && j.ok) ? "OK" : (j?.error || ("HTTP "+r.status));
+    logLastEl.textContent = `${istTimeStr()} (${ms}ms)`;
+
+    return { ...j, latencyMs: ms };
   }catch(e){
     logStateEl.textContent = "POST failed";
     logLastEl.textContent = String(e);
+    return { ok:false, error:String(e) };
   }
 }
+
+logTestBtn.addEventListener("click", async ()=>{
+  const id = "UI-TEST-" + Date.now();
+  const out = await logEvent({
+    event:"TEST",
+    exchange:"MEXC",
+    symbol:SYMBOL,
+    dir:"UP",
+    entryPrice:123,
+    mode:"UI_TEST",
+    eventId:id,
+    note:"test from button"
+  });
+  console.log("log test:", out);
+});
 
 /* =========================================================
    Candles + Indicators
 ========================================================= */
-let candles = []; // {tMs, o,h,l,c,v, closed:true}
+let candles = [];
 let emaFast = [];
 let emaSlow = [];
 let kama = [];
@@ -480,12 +560,9 @@ function emaNext(prev, price, len){
   const k = 2/(len+1);
   return prev + k*(price - prev);
 }
-
 function kamaNext(prev, prices, i){
-  // KAMA based on Kaufman: ER = change/volatility, SC = (ER*(fastSC-slowSC)+slowSC)^2
-  // Using close series.
   const n = KAMA_LEN;
-  if (i < n) return prices[i]; // seed early
+  if (i < n) return prices[i];
   const change = Math.abs(prices[i] - prices[i-n]);
   let vol = 0;
   for (let k=i-n+1; k<=i; k++){
@@ -544,12 +621,9 @@ function rebuildIndicators(){
 }
 
 /* =========================================================
-   Signal Engine (close-only)
+   Signal Engine
 ========================================================= */
-let activeTrade = null; // { startTMs, dir, entry, endTMs, endIdx, settled:false }
-let lastClosedTMs = 0;
-
-// Pullback tracking
+let activeTrade = null;
 let pbState = { armed:false, dir:"", armedAtTMs:0, expiresTMs:0, why:"" };
 
 function candleBodyRatio(c){
@@ -592,7 +666,7 @@ function updateActiveTradeUI(){
   tEndEl.textContent = activeTrade.endTMs ? new Date(activeTrade.endTMs).toLocaleTimeString("en-IN",{timeZone:"Asia/Kolkata"}) : "—";
 }
 
-function engineOnClosedCandle(){
+async function engineOnClosedCandle(){
   const n = candles.length;
   if (n < Math.max(EMA_SLOW+5, 60)) {
     pill.textContent = `Warming… (${n}/60)`;
@@ -614,11 +688,9 @@ function engineOnClosedCandle(){
   ema21El.textContent = fmtPrice(e21);
   kamaEl.textContent = fmtPrice(k);
 
-  // KAMA slope (simple)
   const kSlope = (k - kama[i-3]) / Math.max(1e-9, c.c) * 100;
   kamaSEl.textContent = `${kSlope>=0?"+":""}${kSlope.toFixed(3)}%`;
 
-  // Trend state
   const up = (e9 > e21) && (c.c >= e9);
   const down = (e9 < e21) && (c.c <= e9);
   const trend = up ? "UP" : down ? "DOWN" : "NEUTRAL";
@@ -626,24 +698,14 @@ function engineOnClosedCandle(){
   trendStateEl.textContent = trend;
   trendAtEl.textContent = `Updated: ${istTimeStr()}`;
 
-  // Volume z
   const vz = volZ(c.v);
   volzEl.textContent = Number.isFinite(vz) ? vz.toFixed(2) : "—";
   const volOk = Number.isFinite(vz) ? (vz >= MIN_VOLZ) : false;
 
-  // Stretch filter
   const stretchPct = Math.abs(pctDiff(c.c, e9));
   stretchEl.textContent = `${stretchPct.toFixed(3)}%`;
   const stretchOk = stretchPct <= MAX_STRETCH_PCT;
 
-  // Pullback definition (relaxed, EMA aligned):
-  // - in UP trend: detect a small/medium-body down candle (pullback) near EMA9, then break above last swing high within 2 candles
-  // - in DOWN trend: inverse
-  const bodyOk = candleBodyRatio(c) <= PB_BODY_MAX;
-  let pb = "—";
-  let brk = "—";
-
-  // Build recent swing levels
   const start = Math.max(0, i - PB_LOOKBACK);
   let swingHigh = -Infinity, swingLow = Infinity;
   for (let j=start;j<=i;j++){
@@ -651,60 +713,41 @@ function engineOnClosedCandle(){
     swingLow  = Math.min(swingLow,  candles[j].l);
   }
 
-  // Arm pullback
   if (!pbState.armed){
-    if (trend === "UP"){
+    if (trend === "UP" || trend === "DOWN"){
       const pullC = candles[i-1];
-      const pullIsDown = pullC.c < pullC.o;
-      const pullBodyOk = candleBodyRatio(pullC) <= PB_BODY_MAX;
-      const nearE9 = Math.abs(pctDiff(pullC.c, emaFast[i-1])) <= 0.18; // ~0.18% proximity band
-      if (pullIsDown && pullBodyOk && nearE9){
-        pbState.armed = true;
-        pbState.dir = "UP";
-        pbState.armedAtTMs = pullC.tMs;
-        pbState.expiresTMs = pullC.tMs + (BREAK_WITHIN * 60 * 1000);
-        pbState.why = "PB near EMA9";
-      }
-    } else if (trend === "DOWN"){
-      const pullC = candles[i-1];
-      const pullIsUp = pullC.c > pullC.o;
+      const pullOkDir = (trend==="UP") ? (pullC.c < pullC.o) : (pullC.c > pullC.o);
       const pullBodyOk = candleBodyRatio(pullC) <= PB_BODY_MAX;
       const nearE9 = Math.abs(pctDiff(pullC.c, emaFast[i-1])) <= 0.18;
-      if (pullIsUp && pullBodyOk && nearE9){
+      if (pullOkDir && pullBodyOk && nearE9){
         pbState.armed = true;
-        pbState.dir = "DOWN";
+        pbState.dir = trend;
         pbState.armedAtTMs = pullC.tMs;
         pbState.expiresTMs = pullC.tMs + (BREAK_WITHIN * 60 * 1000);
         pbState.why = "PB near EMA9";
       }
     }
   } else {
-    // expire
     if (c.tMs > pbState.expiresTMs){
       pbState = { armed:false, dir:"", armedAtTMs:0, expiresTMs:0, why:"" };
     }
   }
 
-  pb = pbState.armed ? `${pbState.dir} ARMED` : "NO";
-  pbEl.textContent = pb;
+  pbEl.textContent = pbState.armed ? `${pbState.dir} ARMED` : "NO";
 
-  // Break confirmation (on close only)
   let breakOk = false;
   if (pbState.armed){
     if (pbState.dir === "UP"){
-      // break above swingHigh (from recent window excluding current if you want; keeping simple)
       breakOk = c.c > swingHigh;
-      brk = breakOk ? "YES (close>high)" : "NO";
+      brkEl.textContent = breakOk ? "YES (close>high)" : "NO";
     } else {
       breakOk = c.c < swingLow;
-      brk = breakOk ? "YES (close<low)" : "NO";
+      brkEl.textContent = breakOk ? "YES (close<low)" : "NO";
     }
   } else {
-    brk = "—";
+    brkEl.textContent = "—";
   }
-  brkEl.textContent = brk;
 
-  // Score
   let score = 0;
   score += trend === "UP" || trend === "DOWN" ? 35 : 0;
   score += volOk ? 20 : 0;
@@ -715,7 +758,6 @@ function engineOnClosedCandle(){
   scoreEl.textContent = String(score);
   opScoreEl.textContent = String(score);
 
-  // Action decision
   let action = "WAIT";
   let reason = "Warming…";
   let setup = "—";
@@ -727,7 +769,6 @@ function engineOnClosedCandle(){
   else if (!breakOk) reason = "Waiting break";
   else reason = "Signal OK";
 
-  // Only allow new entry if no active trade
   if (!activeTrade && trend !== "NEUTRAL" && volOk && stretchOk && pbState.armed && breakOk){
     action = pbState.dir === "UP" ? "UP(10)" : "DOWN(10)";
     setup = action;
@@ -739,33 +780,29 @@ function engineOnClosedCandle(){
   reasonEl.textContent = reason;
   setTag(setupTag, setup.startsWith("UP") ? "UP" : setup.startsWith("DOWN") ? "DOWN" : "NEUTRAL");
 
-  // Trend box style
   if (trend === "UP") { setBox(trendBox,"good"); trendWhyEl.textContent = "EMA9>EMA21 & price>=EMA9"; }
   else if (trend === "DOWN") { setBox(trendBox,"bad"); trendWhyEl.textContent = "EMA9<EMA21 & price<=EMA9"; }
   else { setBox(trendBox,"mid"); trendWhyEl.textContent = "Mixed / crossing"; }
 
-  // Opportunity box style
   if (action.startsWith("UP")) setBox(opBox,"good");
   else if (action.startsWith("DOWN")) setBox(opBox,"bad");
   else setBox(opBox, (!volOk || !stretchOk) ? "bad" : "mid");
 
   pill.textContent = `TF: 1m • EMA${EMA_FAST}/${EMA_SLOW} • KAMA(${KAMA_LEN}) • Close-only`;
 
-  // ENTRY (C0) on close only
+  // ✅ ENTRY log (with full columns)
   if (!activeTrade && (action.startsWith("UP") || action.startsWith("DOWN"))){
     const dir = action.startsWith("UP") ? "UP" : "DOWN";
     const startTMs = c.tMs;
     const entry = c.c;
-
-    // determine end candle by time (10 minutes later close time)
     const endTMs = startTMs + (C10_OFFSET * 60 * 1000);
 
     activeTrade = { startTMs, dir, entry, endTMs, endIdx: null, settled:false };
-    pbState = { armed:false, dir:"", armedAtTMs:0, expiresTMs:0, why:"" }; // reset pullback after taking trade
+    pbState = { armed:false, dir:"", armedAtTMs:0, expiresTMs:0, why:"" };
     updateActiveTradeUI();
 
     const eventId = `ENTRY-${SYMBOL}-${startTMs}-${dir}`;
-    logEvent({
+    await logEvent({
       event: "ENTRY",
       exchange: "MEXC",
       symbol: SYMBOL,
@@ -773,13 +810,22 @@ function engineOnClosedCandle(){
       entryPrice: entry,
       mode: "CLOSE_ONLY",
       eventId,
-      note: `score=${score} volz=${Number.isFinite(vz)?vz.toFixed(2):"na"} stretch=${stretchPct.toFixed(3)}`
+      score,
+      volZ: Number.isFinite(vz) ? Number(vz.toFixed(2)) : "",
+      stretchPct: Number(stretchPct.toFixed(3)),
+      trend,
+      pullbackState: "ARMED",
+      breakState: "YES",
+      ema9: Number(e9.toFixed(2)),
+      ema21: Number(e21.toFixed(2)),
+      kama: Number(k.toFixed(2)),
+      kamaSlope: Number(kSlope.toFixed(3)),
+      note: pbState.why || ""
     });
   }
 
-  // SETTLE at C10 (close-only, deterministic)
+  // ✅ RESULT at C10
   if (activeTrade && !activeTrade.settled){
-    // find candle index whose close time == endTMs (or >=, if some gap)
     const endIdx = candles.findIndex(x => x.tMs === activeTrade.endTMs);
     if (endIdx !== -1){
       activeTrade.endIdx = endIdx;
@@ -790,7 +836,7 @@ function engineOnClosedCandle(){
       updateActiveTradeUI();
 
       const eventId = `RESULT-${SYMBOL}-${activeTrade.startTMs}-${activeTrade.dir}`;
-      logEvent({
+      await logEvent({
         event: "RESULT",
         exchange: "MEXC",
         symbol: SYMBOL,
@@ -807,33 +853,27 @@ function engineOnClosedCandle(){
 }
 
 /* =========================================================
-   MEXC REST warmup (kline)
+   REST warmup via Worker /kline
 ========================================================= */
 async function warmupREST(limit=220){
-  // MEXC contract kline requires start/end seconds, returns arrays in data.*
   const nowSec = Math.floor(Date.now()/1000);
   const end = nowSec;
   const start = nowSec - (limit * 60);
   const url = `${MEXC_REST_BASE}/kline?symbol=${encodeURIComponent(SYMBOL)}&interval=${encodeURIComponent(REST_INTERVAL)}&start=${start}&end=${end}`;
 
-
   restStateEl.textContent = "Loading…";
-  footerEl.textContent = `Engine: REST ${url}`;
+  footerEl.textContent = `Engine: REST warmup…`;
 
   const res = await fetch(url);
   const j = await res.json();
 
   if (!j || !j.success || !j.data || !Array.isArray(j.data.time)){
     restStateEl.textContent = "FAIL";
-    footerEl.textContent = `Engine: REST fail (non-kline json)`;
+    footerEl.textContent = `Engine: REST fail`;
     throw new Error("REST warmup failed");
   }
 
-  const t = j.data.time;
-  const o = j.data.open;
-  const h = j.data.high;
-  const l = j.data.low;
-  const c = j.data.close;
+  const t = j.data.time, o=j.data.open, h=j.data.high, l=j.data.low, c=j.data.close;
   const v = j.data.vol ?? j.data.volume ?? j.data.q ?? [];
 
   candles = t.map((ts, i) => ({
@@ -851,7 +891,7 @@ async function warmupREST(limit=220){
 }
 
 /* =========================================================
-   MEXC WS (kline) + ping
+   WS
 ========================================================= */
 let ws = null;
 let pingTimer = null;
@@ -869,7 +909,6 @@ function connectWS(){
     feedEl.textContent = "Live";
     feedEl.className = "up";
 
-    // sub.kline Min1
     ws.send(JSON.stringify({
       method: "sub.kline",
       param: { symbol: SYMBOL, interval: WS_INTERVAL },
@@ -889,7 +928,6 @@ function connectWS(){
   ws.onmessage = (evt)=>{
     let msg;
     try{ msg = JSON.parse(evt.data); }catch{ return; }
-
     if (msg.channel === "pong") return;
 
     if (msg.channel === "push.kline" && msg.data && msg.data.symbol === SYMBOL){
@@ -901,7 +939,6 @@ function connectWS(){
       const o = Number(d.o), h = Number(d.h), l = Number(d.l), c = Number(d.c);
       const v = Number(d.v ?? d.q ?? 0);
 
-      // top price UI
       if (Number.isFinite(c)){
         if (!Number.isFinite(lastPrice)) setDir("flat");
         else if (c > lastPrice) setDir("up");
@@ -913,47 +950,37 @@ function connectWS(){
         timeEl.textContent = istTimeStr();
       }
 
-      // update candle array
       const last = candles[candles.length-1];
       const isNew = !last || last.tMs !== tMs;
 
       if (isNew){
-        // close previous candle indicators update (treat each kline push as closed minute for deterministic engine)
         candles.push({ tMs, o, h, l, c, v, closed:true });
         if (candles.length > 600) candles.shift();
 
-        // incremental indicator update
         const i = candles.length-1;
         const close = candles[i].c;
 
-        // EMA
         const prevEF = emaFast[i-1] ?? close;
         const prevES = emaSlow[i-1] ?? close;
         emaFast.push(emaNext(prevEF, close, EMA_FAST));
         emaSlow.push(emaNext(prevES, close, EMA_SLOW));
 
-        // KAMA
         const closes = candles.map(x=>x.c);
         const prevK = kama[i-1] ?? close;
         kama.push(kamaNext(prevK, closes, i));
 
-        // Vol window
         volPush(v);
 
-        lastClosedTMs = tMs;
         lastCloseEl.textContent = new Date(tMs).toLocaleTimeString("en-IN",{timeZone:"Asia/Kolkata"});
-
-        // Run engine on closed candle
-        engineOnClosedCandle();
-
-        // redraw
-        draw();
         computeDeltas();
         updateActiveTradeUI();
+        draw();
+
+        // ✅ run engine (async-safe)
+        engineOnClosedCandle();
 
       } else {
-        // same timestamp update (should be rare for Min1 but safe)
-        last.o = o; last.h = h; last.l = l; last.c = c; last.v = v;
+        last.o=o; last.h=h; last.l=l; last.c=c; last.v=v;
         draw();
       }
     }
@@ -976,7 +1003,7 @@ function connectWS(){
 }
 
 /* =========================================================
-   Chart (Canvas) – pan/zoom, right pad, EMA/KAMA + markers
+   Canvas Chart (same logic as your original)
 ========================================================= */
 const cv = document.getElementById("cv");
 const ctx = cv.getContext("2d");
@@ -990,51 +1017,36 @@ function resize(){
   draw();
 }
 
-const view = {
-  panX: 0,
-  zoom: 1.0,
-  isDown:false,
-  lastX:0,
-  pinch:null
-};
+const view = { panX:0, zoom:1.0, isDown:false, lastX:0, pinch:null };
 
-function resetView(){
-  view.panX = 0;
-  view.zoom = 1.0;
-  draw();
-}
+function resetView(){ view.panX=0; view.zoom=1.0; draw(); }
 
 function draw(){
   const w = cv.getBoundingClientRect().width;
   const h = cv.getBoundingClientRect().height;
   ctx.clearRect(0,0,w,h);
 
-  // background
   ctx.fillStyle = "rgba(0,0,0,0.18)";
   ctx.fillRect(0,0,w,h);
 
   const n = candles.length;
   if (n < 5) return;
 
-  // visible range
   const rightPad = 0.30;
   const usableW = w * (1 - rightPad);
   const barW = clamp(6 * view.zoom, 3, 18);
   const gap = 2;
   const step = barW + gap;
 
-  // how many bars fit
   const barsFit = Math.floor(usableW / step);
   const end = n;
   const start = Math.max(0, end - barsFit);
 
-  // price scale
   let hi = -Infinity, lo = Infinity;
   for (let i=start;i<end;i++){
     hi = Math.max(hi, candles[i].h);
     lo = Math.min(lo, candles[i].l);
   }
-  // add margin
   const pad = (hi-lo)*0.06 || 1;
   hi += pad; lo -= pad;
 
@@ -1042,11 +1054,9 @@ function draw(){
     return (h-14) - ((p - lo) / Math.max(1e-9, (hi-lo))) * (h-28);
   }
 
-  // x scale with pan
   const baseX = 10 + view.panX;
   let x = baseX;
 
-  // grid lines
   ctx.strokeStyle = "rgba(255,255,255,0.06)";
   ctx.lineWidth = 1;
   for (let k=0;k<5;k++){
@@ -1054,7 +1064,6 @@ function draw(){
     ctx.beginPath(); ctx.moveTo(0,yy); ctx.lineTo(w,yy); ctx.stroke();
   }
 
-  // EMA / KAMA lines
   function drawLine(series, color){
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
@@ -1072,20 +1081,17 @@ function draw(){
     ctx.stroke();
   }
 
-  // Candle bodies + wicks
   for (let i=start;i<end;i++){
     const c = candles[i];
     const up = c.c >= c.o;
     const col = up ? "rgba(34,197,94,0.95)" : "rgba(239,68,68,0.95)";
 
-    // wick
     ctx.strokeStyle = "rgba(255,255,255,0.18)";
     ctx.beginPath();
     ctx.moveTo(x + barW/2, y(c.h));
     ctx.lineTo(x + barW/2, y(c.l));
     ctx.stroke();
 
-    // body
     ctx.fillStyle = col;
     const y1 = y(c.o);
     const y2 = y(c.c);
@@ -1096,77 +1102,15 @@ function draw(){
     x += step;
   }
 
-  // overlay EMA/KAMA (subtle)
   drawLine(emaFast, "rgba(255,255,255,0.55)");
   drawLine(emaSlow, "rgba(255,255,255,0.28)");
   drawLine(kama,    "rgba(250,204,21,0.70)");
 
-  // markers for active trade
-  if (activeTrade){
-    // find start index by time
-    const sIdx = candles.findIndex(z => z.tMs === activeTrade.startTMs);
-    const eIdx = candles.findIndex(z => z.tMs === activeTrade.endTMs);
-    const startInView = sIdx >= start && sIdx < end;
-    const endInView = eIdx >= start && eIdx < end;
-
-    function xForIndex(idx){
-      return baseX + (idx - start)*step + barW/2;
-    }
-
-    // C0
-    if (startInView){
-      const xx = xForIndex(sIdx);
-      const yy = y(candles[sIdx].c);
-      ctx.fillStyle = activeTrade.dir==="UP" ? "rgba(34,197,94,0.95)" : "rgba(239,68,68,0.95)";
-      ctx.beginPath(); ctx.arc(xx, yy, 6, 0, Math.PI*2); ctx.fill();
-
-      ctx.fillStyle = "rgba(0,0,0,0.75)";
-      ctx.fillRect(xx-18, yy-30, 36, 18);
-      ctx.fillStyle = "rgba(255,255,255,0.95)";
-      ctx.font = "12px system-ui";
-      ctx.textAlign = "center";
-      ctx.fillText("C0", xx, yy-17);
-    }
-
-    // C10
-    if (endInView){
-      const xx = xForIndex(eIdx);
-      const yy = y(candles[eIdx].c);
-      ctx.fillStyle = "rgba(255,255,255,0.95)";
-      ctx.beginPath(); ctx.arc(xx, yy, 6, 0, Math.PI*2); ctx.fill();
-
-      // WIN/LOSS if settled
-      if (activeTrade.settled){
-        const endClose = candles[eIdx].c;
-        const win = activeTrade.dir==="UP" ? (endClose > activeTrade.entry) : (endClose < activeTrade.entry);
-        const label = win ? "WIN" : "LOSS";
-        ctx.fillStyle = win ? "rgba(34,197,94,0.95)" : "rgba(239,68,68,0.95)";
-        ctx.fillRect(xx-28, yy-30, 56, 18);
-        ctx.fillStyle = "rgba(0,0,0,0.90)";
-        ctx.font = "12px system-ui";
-        ctx.textAlign = "center";
-        ctx.fillText(label, xx, yy-17);
-      } else {
-        ctx.fillStyle = "rgba(0,0,0,0.75)";
-        ctx.fillRect(xx-20, yy-30, 40, 18);
-        ctx.fillStyle = "rgba(255,255,255,0.95)";
-        ctx.font = "12px system-ui";
-        ctx.textAlign = "center";
-        ctx.fillText("C10", xx, yy-17);
-      }
-    }
-  }
-
-  // right pad hint (very subtle)
   ctx.fillStyle = "rgba(255,255,255,0.02)";
   ctx.fillRect(usableW, 0, w-usableW, h);
 }
 
-/* mouse pan */
-cv.addEventListener("mousedown",(e)=>{
-  view.isDown = true;
-  view.lastX = e.clientX;
-},{passive:true});
+cv.addEventListener("mousedown",(e)=>{ view.isDown=true; view.lastX=e.clientX; },{passive:true});
 window.addEventListener("mouseup",()=>{ view.isDown=false; },{passive:true});
 window.addEventListener("mousemove",(e)=>{
   if (!view.isDown) return;
@@ -1176,7 +1120,6 @@ window.addEventListener("mousemove",(e)=>{
   draw();
 },{passive:true});
 
-/* wheel zoom */
 cv.addEventListener("wheel",(e)=>{
   e.preventDefault();
   const delta = e.deltaY;
@@ -1189,10 +1132,8 @@ cv.addEventListener("wheel",(e)=>{
   draw();
 },{passive:false});
 
-/* double click reset */
 cv.addEventListener("dblclick", resetView, {passive:true});
 
-/* touch pan/pinch + double tap */
 cv.addEventListener("touchstart",(e)=>{
   if (e.touches.length===1){
     view.isDown=true; view.lastX=e.touches[0].clientX; view.pinch=null;
@@ -1248,6 +1189,7 @@ async function start(){
     computeDeltas();
     draw();
     footerEl.textContent = "Engine: REST warmup OK • connecting WS…";
+    restStateEl.textContent = "OK";
     connectWS();
   }catch(e){
     footerEl.textContent = "Engine: REST failed • still attempting WS…";
@@ -1255,7 +1197,7 @@ async function start(){
   }
   setInterval(()=>{ timeEl.textContent = istTimeStr(); }, 800);
   updateActiveTradeUI();
-  logStateEl.textContent = LOG_ENDPOINT.includes("PASTE_") ? "Disabled" : "Ready";
+  logStateEl.textContent = LOG_ENDPOINT ? "Ready" : "Disabled";
 }
 start();
 </script>
