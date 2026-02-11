@@ -3,323 +3,276 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>MEXC BTC Dashboard • Chart-first • C0→C10</title>
+<title>BTCUSDT • 1m Futures • Pullback → 10 Candles (Chart-first)</title>
 <style>
 :root{
   --bg:#0b0f14;
   --ui:#0f1620;
-  --card:rgba(255,255,255,0.03);
-  --br:rgba(255,255,255,0.10);
   --fg:#e8eef7;
   --muted:#9aa6b2;
   --up:#22c55e;
   --down:#ef4444;
   --flat:#facc15;
-  --shadow:0 16px 40px rgba(0,0,0,0.45);
+  --shadow:0 18px 44px rgba(0,0,0,0.50);
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
+.container{min-height:100vh;display:flex;flex-direction:column}
+.wrap{width:min(1600px, calc(100vw - 24px));margin:0 auto;padding:0 12px}
 
-.wrap{max-width:1500px;margin:0 auto;padding:10px 12px 16px}
+/* header */
+.header{
+  background:radial-gradient(1200px 520px at 28% 10%, rgba(255,255,255,0.06), transparent 60%),
+             linear-gradient(180deg,var(--ui),var(--bg));
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  padding:10px 0 12px;
+}
+.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.title{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.wsPill{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:8px 12px;border-radius:999px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(0,0,0,0.22);
+  font-size:12px;color:var(--muted);
+}
+.dot{width:10px;height:10px;border-radius:999px;background:rgba(250,204,21,0.90)}
+.dot.on{background:rgba(34,197,94,0.90)}
+.dot.off{background:rgba(239,68,68,0.90)}
+.wsPill b{color:var(--fg)}
 
-/* Top bar */
-.topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.brand{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.status{font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;white-space:nowrap}
-
-/* Price row */
-.priceRow{display:flex;align-items:baseline;justify-content:center;gap:10px;margin:10px 0 8px}
-.price{font-size:clamp(48px,6.4vw,110px);font-weight:950;line-height:1;font-variant-numeric:tabular-nums}
-.arrow{font-size:clamp(28px,4.5vw,86px);font-weight:950;line-height:1}
+.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:10px}
+.priceRow{display:flex;align-items:baseline;gap:10px}
+.price{font-size:clamp(54px, 6.8vw, 118px);font-weight:1000;line-height:1;font-variant-numeric:tabular-nums}
+.arrow{font-size:clamp(28px, 4.4vw, 86px);font-weight:1000;line-height:1}
 .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
 
-/* Deltas strip */
-.deltas{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:0 0 10px}
-.chip{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.20);font-size:12px;color:var(--muted)}
-.chip b{color:var(--fg)}
-
-/* Layout */
-.grid{display:grid;grid-template-columns:1fr;gap:12px}
-
-.card{border:1px solid rgba(255,255,255,0.08);background:rgba(18,27,38,0.92);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
-.cardHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.08);flex-wrap:wrap}
-.cardTitle{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.tags{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.tag{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.12);background:rgba(0,0,0,0.22);font-size:12px;color:var(--muted)}
-.tag b{color:var(--fg)}
-.tag.good{border-color:rgba(34,197,94,0.35)}
-.tag.bad{border-color:rgba(239,68,68,0.35)}
-.tag.neu{border-color:rgba(255,255,255,0.14)}
-
-.cardBody{padding:12px}
-
-/* Chart */
-.chartBox{display:flex;flex-direction:column;gap:8px}
-#cv{width:100%;height:72vh;min-height:520px;max-height:760px;display:block;border-radius:14px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.10);touch-action:none;cursor:grab}
-#cv:active{cursor:grabbing}
-.hint{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
-.hint .chip{padding:6px 10px}
-
-/* Signal */
-.big{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 14px;border-radius:16px;border:1px solid rgba(255,255,255,0.14);background:rgba(0,0,0,0.18)}
-.big.good{border-color:rgba(34,197,94,0.35);background:rgba(34,197,94,0.12)}
-.big.bad{border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.12)}
-.big.mid{border-color:rgba(250,204,21,0.28);background:rgba(250,204,21,0.10)}
-.bigL{display:flex;flex-direction:column;gap:4px}
-.bigLabel{font-size:12px;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)}
-.bigState{font-size:28px;font-weight:1000}
-.bigSub{font-size:12px;color:var(--muted);font-weight:800}
-.bigR{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-.kpi{display:flex;gap:8px;align-items:baseline}
-.kpi .num{font-size:26px;font-weight:1000}
-.kpi .unit{font-size:12px;color:var(--muted);font-weight:800}
-
-.grid2{display:grid;grid-template-columns:1.1fr 0.9fr;gap:12px}
-@media (max-width:980px){
-  #cv{height:64vh;min-height:440px}
-  .grid2{grid-template-columns:1fr}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{
+  appearance:none;border:1px solid rgba(255,255,255,0.14);
+  background:rgba(0,0,0,0.22);color:var(--fg);
+  padding:10px 12px;border-radius:14px;cursor:pointer;
+  font-weight:900;font-size:13px;
 }
+.btn:hover{border-color:rgba(255,255,255,0.22)}
+.btn.warn{border-color:rgba(250,204,21,0.35)}
+.btn.danger{border-color:rgba(239,68,68,0.35)}
 
-.miniGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
-@media (max-width:980px){ .miniGrid{grid-template-columns:1fr 1fr} }
-@media (max-width:520px){ .miniGrid{grid-template-columns:1fr} }
-.mini{border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.18);border-radius:12px;padding:10px 12px}
-.mini .t{font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.mini .row{display:flex;justify-content:space-between;gap:10px;font-size:13px}
-.mini .row b{font-weight:1000}
+.smallNote{font-size:12px;color:var(--muted);margin-top:6px}
 
-.btn{appearance:none;border:1px solid rgba(255,255,255,0.14);background:rgba(0,0,0,0.22);color:var(--fg);border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer}
-.btn:active{transform:translateY(1px)}
+/* stats grid */
+.stats{padding:10px 0 0}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(4,1fr)}
+@media (max-width:1100px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.grid{grid-template-columns:1fr}}
 
-.footer{color:var(--muted);font-size:12px;text-align:center;margin-top:10px}
+.card{
+  border:1px solid rgba(255,255,255,0.10);
+  background:rgba(0,0,0,0.20);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  padding:12px 14px;
+}
+.cardTop{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cardLabel{font-size:12px;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)}
+.cardVal{font-size:18px;font-weight:1000}
+.sub{font-size:12px;color:var(--muted);margin-top:6px}
+.bigVal{font-size:22px;font-weight:1000}
+.pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 10px;border-radius:999px;
+  border:1px solid rgba(255,255,255,0.14);
+  background:rgba(0,0,0,0.22);
+  color:var(--muted);font-size:12px;
+}
+.pill b{color:var(--fg)}
+.pill.good{border-color:rgba(34,197,94,0.35)}
+.pill.bad{border-color:rgba(239,68,68,0.35)}
+.pill.neu{border-color:rgba(255,255,255,0.14)}
+
+/* chart */
+.chartWrap{padding:12px 0 16px}
+.chartPanel{
+  border:1px solid rgba(255,255,255,0.10);
+  background:rgba(255,255,255,0.03);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.chartHead{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  padding:10px 12px;background:rgba(255,255,255,0.04);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.chartTitle{font-size:12px;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.chip{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:7px 10px;border-radius:999px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(0,0,0,0.22);
+  font-size:12px;color:var(--muted);
+}
+.chip b{color:var(--fg)}
+.chip.good{border-color:rgba(34,197,94,0.35)}
+.chip.bad{border-color:rgba(239,68,68,0.35)}
+.chip.neu{border-color:rgba(255,255,255,0.14)}
+
+.chartBody{padding:12px}
+#cv{
+  width:100%;
+  height:min(62vh, 660px);
+  display:block;
+  border-radius:16px;
+  background:rgba(0,0,0,0.18);
+  border:1px solid rgba(255,255,255,0.10);
+  touch-action:none;
+  cursor:grab;
+}
+#cv:active{cursor:grabbing}
+.noteRow{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+.noteRow .chip{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.18)}
+.footer{padding:10px 0 18px;text-align:center;color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="brand">MEXC Futures • <span id="symTop">BTC_USDT</span> • 1m • C0→C10 • Worker Log</div>
-      <div class="status">
-        <span>Updated:</span> <span id="time">—</span>
-        <span style="opacity:.6">•</span>
-        <span>Feed:</span> <span id="feed" class="flat">Booting…</span>
-      </div>
-    </div>
-
-    <div class="priceRow">
-      <div id="price" class="price flat">—</div>
-      <div id="arrow" class="arrow flat">●</div>
-    </div>
-
-    <div class="deltas">
-      <span class="chip">Last <b id="last">—</b></span>
-      <span class="chip">Δ 1m <b id="chg1m">—</b></span>
-      <span class="chip">Δ 3m <b id="chg3m">—</b></span>
-      <span class="chip">Δ 5m <b id="chg5m">—</b></span>
-      <span class="chip">Δ 10m <b id="chg10m">—</b></span>
-    </div>
-
-    <div class="grid">
-      <!-- CHART FIRST -->
-      <div class="card">
-        <div class="cardHead">
-          <div class="cardTitle">Chart • 1m • EMA9/21 + KAMA • Signal + C0/C10 markers</div>
-          <div class="tags">
-            <span class="tag neu" id="trendTag">Trend: <b>—</b></span>
-            <span class="tag neu" id="setupTag">Setup: <b>—</b></span>
-            <span class="tag neu">Drag: <b>Pan</b> • Wheel: <b>Zoom</b> • Dbl-tap/click: <b>Reset</b></span>
-          </div>
-        </div>
-        <div class="cardBody chartBox">
-          <canvas id="cv"></canvas>
-          <div class="hint">
-            <span class="chip">Right pad: 30%</span>
-            <span class="chip">Entry only on closed candle</span>
-            <span class="chip">C10 settles after 10 closed candles</span>
-          </div>
+<div class="container">
+  <div class="header">
+    <div class="wrap">
+      <div class="topline">
+        <div class="title">BTCUSDT • 1m • Futures • Pullback → 10 Candles</div>
+        <div class="wsPill">
+          <span class="dot" id="wsDot"></span>
+          <span>WS</span><b id="wsState">—</b>
+          <span style="opacity:.6">•</span>
+          <span>Live</span><b id="feed">—</b>
+          <span style="opacity:.6">•</span>
+          <span>Updated</span><b id="time">—</b>
         </div>
       </div>
 
-      <!-- SIGNAL (MANUAL TRADING) -->
-      <div class="card">
-        <div class="cardHead">
-          <div class="cardTitle">1m Trend + Signal (Close-only)</div>
-          <div class="tags">
-            <span class="tag neu" id="pill">Warming…</span>
-          </div>
+      <div class="hero">
+        <div class="priceRow">
+          <div id="price" class="price flat">—</div>
+          <div id="arrow" class="arrow flat">●</div>
         </div>
-        <div class="cardBody">
-          <div class="grid2">
-            <div>
-              <div id="trendBox" class="big mid">
-                <div class="bigL">
-                  <div class="bigLabel">Trend</div>
-                  <div class="bigState" id="trendState">—</div>
-                  <div class="bigSub" id="trendWhy">—</div>
-                </div>
-                <div class="bigR">
-                  <div class="kpi"><span class="num" id="score">—</span><span class="unit">/100</span></div>
-                  <div class="bigSub" id="trendAt">—</div>
-                </div>
-              </div>
+        <div class="actions">
+          <button class="btn warn" id="btnResetView" type="button">Reset View</button>
+          <button class="btn danger" id="btnClearTrade" type="button">Clear Trade</button>
+        </div>
+      </div>
 
-              <div class="miniGrid">
-                <div class="mini">
-                  <div class="t">Filters</div>
-                  <div class="row"><span>Vol z</span><b id="volz">—</b></div>
-                  <div class="row"><span>Stretch</span><b id="stretch">—</b></div>
-                </div>
-                <div class="mini">
-                  <div class="t">Pullback</div>
-                  <div class="row"><span>State</span><b id="pb">—</b></div>
-                  <div class="row"><span>Break</span><b id="brk">—</b></div>
-                </div>
-                <div class="mini">
-                  <div class="t">EMAs</div>
-                  <div class="row"><span>EMA9</span><b id="ema9v">—</b></div>
-                  <div class="row"><span>EMA21</span><b id="ema21v">—</b></div>
-                </div>
-                <div class="mini">
-                  <div class="t">KAMA</div>
-                  <div class="row"><span>KAMA</span><b id="kamav">—</b></div>
-                  <div class="row"><span>Slope</span><b id="kamas">—</b></div>
-                </div>
-              </div>
-            </div>
+      <div class="smallNote" id="status">Starting…</div>
 
-            <div>
-              <div id="opBox" class="big mid">
-                <div class="bigL">
-                  <div class="bigLabel">Action</div>
-                  <div class="bigState" id="action">WAIT</div>
-                  <div class="bigSub" id="reason">Warming…</div>
-                </div>
-                <div class="bigR">
-                  <div class="kpi"><span class="num" id="opScore">—</span><span class="unit">/100</span></div>
-                  <div class="bigSub" id="window">Window: 10 candles</div>
-                </div>
-              </div>
-
-              <div class="miniGrid" style="grid-template-columns:1fr 1fr;">
-                
-              </div>
-
-              <div class="mini" style="margin-top:10px">
-                <div class="t">Active Trade (C0→C10)</div>
-                <div class="row"><span>State</span><b id="tState">—</b></div>
-                <div class="row"><span>Dir</span><b id="tDir">—</b></div>
-                <div class="row"><span>Entry (C0)</span><b id="tEntry">—</b></div>
-                <div class="row"><span>End (C10)</span><b id="tEnd">—</b></div>
-              </div>
-            </div>
+      <div class="stats">
+        <div class="grid">
+          <div class="card">
+            <div class="cardTop"><div class="cardLabel">24H</div><div class="bigVal" id="chg24h">—</div></div>
+            <div class="sub">Binance ticker % change</div>
           </div>
-
-          <div style="margin-top:10px;color:var(--muted);font-size:12px;line-height:1.4">
-            Manual trading aid only. For TradingView-style drawing tools & Pine indicators: see note below.
+          <div class="card">
+            <div class="cardTop"><div class="cardLabel">Trend</div><div class="bigVal" id="trend">—</div></div>
+            <div class="sub"><span class="pill neu" id="trendPill">EMA20/50 • Chop <b id="chop">—</b></span></div>
+          </div>
+          <div class="card">
+            <div class="cardTop"><div class="cardLabel">Setup</div><div class="bigVal" id="setup">—</div></div>
+            <div class="sub"><span class="pill neu" id="setupPill">Score <b id="score">—</b>/100</span></div>
+          </div>
+          <div class="card">
+            <div class="cardTop"><div class="cardLabel">Active</div><div class="bigVal" id="active">—</div></div>
+            <div class="sub" id="activeSub">C0 — • C10 —</div>
+          </div>
+          <div class="card">
+            <div class="cardTop"><div class="cardLabel">Δ1M</div><div class="cardVal" id="d1">—</div></div>
+            <div class="sub">Close to close</div>
+          </div>
+          <div class="card">
+            <div class="cardTop"><div class="cardLabel">Δ3M</div><div class="cardVal" id="d3">—</div></div>
+            <div class="sub">Close to close</div>
+          </div>
+          <div class="card">
+            <div class="cardTop"><div class="cardLabel">Δ5M</div><div class="cardVal" id="d5">—</div></div>
+            <div class="sub">Close to close</div>
+          </div>
+          <div class="card">
+            <div class="cardTop"><div class="cardLabel">Δ10M</div><div class="cardVal" id="d10">—</div></div>
+            <div class="sub">Close to close</div>
           </div>
         </div>
       </div>
 
-      <div class="footer" id="footer">Engine: booting…</div>
     </div>
   </div>
 
+  <div class="chartWrap">
+    <div class="wrap">
+      <div class="chartPanel">
+        <div class="chartHead">
+          <div class="chartTitle">Chart • 1m candles • EMA20/50 • Pullback trigger • C0/C10 outcome</div>
+          <div class="chips">
+            <span class="chip neu" id="chipTrend">Trend: <b>—</b></span>
+            <span class="chip neu" id="chipSetup">Setup: <b>—</b></span>
+            <span class="chip neu">Drag: <b>Pan</b> • Wheel: <b>Zoom</b> • Dbl-click: <b>Reset</b></span>
+          </div>
+        </div>
+        <div class="chartBody">
+          <canvas id="cv"></canvas>
+          <div class="noteRow">
+            <span class="chip">Right pad: 30%</span>
+            <span class="chip">Markers: C0 ▲/▼, C1/C2 dots, C10 ● + WIN/LOSS</span>
+            <span class="chip">Active trade tracked by candle time (no drift)</span>
+          </div>
+        </div>
+      </div>
+      <div class="footer">Keep this file as <b>index.html</b> in your repo, then push to GitHub/Cloudflare Pages.</div>
+    </div>
+  </div>
+</div>
+
 <script>
-/* =========================================================
-   CONFIG (YOU EDIT THESE)
-========================================================= */
-// ✅ Your Worker endpoints
-const LOG_ENDPOINT   = "https://mexc-btc-logger.mariappan-siddan.workers.dev/log";
-const MEXC_REST_BASE = "https://mexc-btc-logger.mariappan-siddan.workers.dev"; // has /kline proxy
+const CONFIG = {
+  SYMBOL_REST: "BTCUSDT",
+  SYMBOL_WS: "btcusdt",
+  KLINE_INTERVAL: "1m",
+  EMA_FAST: 20,
+  EMA_SLOW: 50,
+  VOL_Z_LEN: 50,
+  TH: { MIN_STRENGTH: 65, MAX_CHOP: 65, MIN_VOLZ: -0.10 }
+};
+const REST_KLINES = "https://fapi.binance.com/fapi/v1/klines";
+const WS_BASE = "wss://fstream.binance.com/ws";
 
-// MEXC Futures (Contract) WS
-const MEXC_WS  = "wss://contract.mexc.com/edge";
-
-const SYMBOL = "BTC_USDT";
-const WS_INTERVAL = "Min1";
-const REST_INTERVAL = "Min1";
-
-// Strategy params (close-only)
-const EMA_FAST = 9;
-const EMA_SLOW = 21;
-
-// KAMA
-const KAMA_LEN = 10;
-const KAMA_FAST = 2;
-const KAMA_SLOW = 30;
-
-// Filters
-const VOLZ_LEN = 50;
-const MIN_VOLZ = -0.10;
-const MAX_STRETCH_PCT = 0.35;
-
-// Pullback-break
-const PB_LOOKBACK = 6;
-const PB_BODY_MAX = 0.65;
-const BREAK_WITHIN = 2;
-
-// Trade outcome
-const C10_OFFSET = 10;
-
-/* =========================================================
-   UI refs
-========================================================= */
 const $ = (id)=>document.getElementById(id);
-$("symTop").textContent = SYMBOL;
-
 const priceEl = $("price");
 const arrowEl = $("arrow");
 const timeEl = $("time");
 const feedEl = $("feed");
 const wsStateEl = $("wsState");
-const restStateEl = $("restState");
-const lastCloseEl = $("lastClose");
-const footerEl = $("footer");
+const wsDot = $("wsDot");
+const statusEl = $("status");
 
-const lastEl = $("last");
-const chg1mEl = $("chg1m");
-const chg3mEl = $("chg3m");
-const chg5mEl = $("chg5m");
-const chg10mEl = $("chg10m");
-
-const trendTag = $("trendTag");
-const setupTag = $("setupTag");
-const pill = $("pill");
-
-const trendBox = $("trendBox");
-const trendStateEl = $("trendState");
-const trendWhyEl = $("trendWhy");
+const chg24hEl = $("chg24h");
+const trendEl = $("trend");
+const setupEl = $("setup");
 const scoreEl = $("score");
-const trendAtEl = $("trendAt");
+const chopEl = $("chop");
+const activeEl = $("active");
+const activeSubEl = $("activeSub");
 
-const volzEl = $("volz");
-const stretchEl = $("stretch");
-const pbEl = $("pb");
-const brkEl = $("brk");
-const ema9El = $("ema9v");
-const ema21El = $("ema21v");
-const kamaEl = $("kamav");
-const kamaSEl = $("kamas");
+const d1El = $("d1");
+const d3El = $("d3");
+const d5El = $("d5");
+const d10El = $("d10");
 
-const opBox = $("opBox");
-const actionEl = $("action");
-const reasonEl = $("reason");
-const opScoreEl = $("opScore");
+const chipTrend = $("chipTrend");
+const chipSetup = $("chipSetup");
+const trendPill = $("trendPill");
+const setupPill = $("setupPill");
 
-const logEpEl = $("logEp");
-const logLastEl = $("logLast");
-const btnLog = $("btnLog");
+const btnResetView = $("btnResetView");
+const btnClearTrade = $("btnClearTrade");
 
-const tStateEl = $("tState");
-const tDirEl = $("tDir");
-const tEntryEl = $("tEntry");
-const tEndEl = $("tEnd");
-
-/* =========================================================
-   Helpers
-========================================================= */
-function istTimeStr(){
-  return new Date().toLocaleTimeString("en-IN",{timeZone:"Asia/Kolkata"});
-}
+function istTimeStr(){ return new Date().toLocaleTimeString("en-IN",{timeZone:"Asia/Kolkata"}); }
 function fmtPrice(x){
   const n = Number(x);
   if (!Number.isFinite(n)) return "—";
@@ -331,758 +284,529 @@ function setDir(type){
   arrowEl.className = "arrow " + type;
   arrowEl.textContent = type==="up" ? "▲" : type==="down" ? "▼" : "●";
 }
-function setTag(tagEl, state){
-  const b = tagEl.querySelector("b");
+function setChip(chipEl, state){
+  const b = chipEl?.querySelector("b");
   if (b) b.textContent = state;
-  tagEl.classList.remove("good","bad","neu");
-  if (state === "UP") tagEl.classList.add("good");
-  else if (state === "DOWN") tagEl.classList.add("bad");
-  else tagEl.classList.add("neu");
+  chipEl.classList.remove("good","bad","neu");
+  if (state.startsWith("UP")) chipEl.classList.add("good");
+  else if (state.startsWith("DOWN")) chipEl.classList.add("bad");
+  else chipEl.classList.add("neu");
 }
-function setBox(box, type){
-  box.classList.remove("good","bad","mid");
-  box.classList.add(type);
+function setPill(pillEl, type){
+  pillEl.classList.remove("good","bad","neu");
+  pillEl.classList.add(type);
 }
-
-/* =========================================================
-   Logger
-========================================================= */
-logEpEl.textContent = LOG_ENDPOINT ? "SET" : "NOT SET";
-
-async function logEvent(payload){
-  if (!LOG_ENDPOINT) return;
-  const r = await fetch(LOG_ENDPOINT, {
-    method:"POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(payload)
-  });
-  const txt = await r.text();
-  logLastEl.textContent = istTimeStr();
-  return { ok: r.ok, status:r.status, text:txt };
+function setTextColored(el, txt, dir){
+  el.classList.remove("up","down","flat");
+  el.classList.add(dir || "flat");
+  el.textContent = txt;
 }
 
-btnLog.addEventListener("click", async ()=>{
-  btnLog.disabled = true;
-  btnLog.textContent = "Logging…";
-  try{
-    const out = await logEvent({
-      event:"TEST",
-      exchange:"MEXC",
-      symbol:SYMBOL,
-      dir:"UP",
-      entryPrice:123,
-      mode:"TEST",
-      eventId:`TEST-${Date.now()}`,
-      note:"manual test"
-    });
-    btnLog.textContent = out?.ok ? "Logged ✓" : `HTTP ${out?.status}`;
-  }catch(e){
-    btnLog.textContent = "Failed";
-  }
-  setTimeout(()=>{ btnLog.textContent = "Log Test"; btnLog.disabled=false; }, 1200);
-});
-
-/* =========================================================
-   Candles + Indicators
-========================================================= */
-let candles = []; // {tMs, o,h,l,c,v, closed:true}
+/* state */
+let lastTickPrice = NaN;
+let candles = [];
 let emaFast = [];
 let emaSlow = [];
-let kama = [];
-let volWin = [];
-let volSum = 0;
-let volSumSq = 0;
 
+/* vol z */
+let volWindow=[], volSum=0, volSumSq=0;
+function volReset(){
+  volWindow=[]; volSum=0; volSumSq=0;
+  const start = Math.max(0, candles.length - CONFIG.VOL_Z_LEN);
+  for (let i=start;i<candles.length;i++){
+    const v=candles[i].volume;
+    volWindow.push(v); volSum+=v; volSumSq+=v*v;
+  }
+}
+function volPush(v){
+  volWindow.push(v); volSum+=v; volSumSq+=v*v;
+  if (volWindow.length > CONFIG.VOL_Z_LEN){
+    const old=volWindow.shift();
+    volSum-=old; volSumSq-=old*old;
+  }
+}
+function volZ(v){
+  if (volWindow.length < CONFIG.VOL_Z_LEN) return NaN;
+  const mean = volSum/volWindow.length;
+  const variance = Math.max(1e-12, (volSumSq/volWindow.length) - mean*mean);
+  const std = Math.sqrt(variance);
+  return (v-mean)/(std||1);
+}
+
+/* ema */
 function emaNext(prev, price, len){
   const k = 2/(len+1);
   return prev + k*(price - prev);
 }
-
-function kamaNext(prev, prices, i){
-  const n = KAMA_LEN;
-  if (i < n) return prices[i];
-  const change = Math.abs(prices[i] - prices[i-n]);
-  let vol = 0;
-  for (let k=i-n+1; k<=i; k++) vol += Math.abs(prices[k] - prices[k-1]);
-  const er = vol > 0 ? (change / vol) : 0;
-  const fastSC = 2/(KAMA_FAST+1);
-  const slowSC = 2/(KAMA_SLOW+1);
-  const sc = Math.pow(er*(fastSC - slowSC) + slowSC, 2);
-  return prev + sc*(prices[i] - prev);
-}
-
-function volReset(){
-  volWin = []; volSum = 0; volSumSq = 0;
-  const start = Math.max(0, candles.length - VOLZ_LEN);
-  for (let i=start;i<candles.length;i++){
-    const v = candles[i].v;
-    volWin.push(v); volSum += v; volSumSq += v*v;
-  }
-}
-function volPush(v){
-  volWin.push(v); volSum += v; volSumSq += v*v;
-  if (volWin.length > VOLZ_LEN){
-    const old = volWin.shift();
-    volSum -= old; volSumSq -= old*old;
-  }
-}
-function volZ(v){
-  if (volWin.length < VOLZ_LEN) return NaN;
-  const mean = volSum / volWin.length;
-  const variance = Math.max(1e-12, (volSumSq/volWin.length) - mean*mean);
-  const std = Math.sqrt(variance);
-  return (v - mean) / (std || 1);
-}
-
-function rebuildIndicators(){
-  emaFast = []; emaSlow = []; kama = [];
+function rebuildEMAs(){
+  emaFast=[]; emaSlow=[];
   if (!candles.length) return;
-  let eF = candles[0].c;
-  let eS = candles[0].c;
-  emaFast.push(eF); emaSlow.push(eS);
-  const closes = candles.map(x=>x.c);
-  let kPrev = closes[0];
-  kama.push(kPrev);
+  let ef=candles[0].close;
+  let es=candles[0].close;
+  emaFast.push(ef); emaSlow.push(es);
   for (let i=1;i<candles.length;i++){
-    eF = emaNext(eF, closes[i], EMA_FAST);
-    eS = emaNext(eS, closes[i], EMA_SLOW);
-    emaFast.push(eF); emaSlow.push(eS);
-    kPrev = kamaNext(kPrev, closes, i);
-    kama.push(kPrev);
+    ef=emaNext(ef, candles[i].close, CONFIG.EMA_FAST);
+    es=emaNext(es, candles[i].close, CONFIG.EMA_SLOW);
+    emaFast.push(ef); emaSlow.push(es);
   }
-  volReset();
 }
 
-/* =========================================================
-   Signal Engine
-========================================================= */
-let activeTrade = null; // { startTMs, dir, entry, endTMs, endIdx, settled:false }
-let pbState = { armed:false, dir:"", armedAtTMs:0, expiresTMs:0, why:"" };
-let lastPrice = NaN;
-let lastSignal = { dir:"", tMs:0, price:NaN, label:"" }; // for chart marker
-
-function candleBodyRatio(c){
-  const range = Math.max(1e-9, (c.h - c.l));
-  return Math.abs(c.c - c.o)/range;
+/* deltas */
+function formatDelta(curr, prev){
+  if (!Number.isFinite(curr) || !Number.isFinite(prev) || prev===0) return {txt:"—",dir:"flat"};
+  const diff=curr-prev;
+  const p=(diff/prev)*100;
+  const sign=diff>=0?"+":"";
+  const dir=diff>0?"up":diff<0?"down":"flat";
+  return {txt:`${sign}${diff.toFixed(1)} (${sign}${p.toFixed(3)}%)`, dir};
 }
-function pctDiff(a,b){ return ((a-b)/Math.max(1e-9,b))*100; }
-
-function computeDeltas(){
-  const n = candles.length;
-  function setDelta(el, idxBack){
-    if (n < idxBack+1){ el.textContent="—"; return; }
-    const curr = candles[n-1].c;
-    const prev = candles[n-1-idxBack].c;
-    const diff = curr - prev;
-    const p = (diff/prev)*100;
-    const sign = diff>=0?"+":"";
-    el.textContent = `${sign}${diff.toFixed(2)} (${sign}${p.toFixed(3)}%)`;
-    el.classList.remove("up","down","flat");
-    el.classList.add(diff>0?"up":diff<0?"down":"flat");
-  }
-  setDelta(chg1mEl,1);
-  setDelta(chg3mEl,3);
-  setDelta(chg5mEl,5);
-  setDelta(chg10mEl,10);
+function updateDeltas(){
+  const n=candles.length;
+  if (n<12) return;
+  const curr=candles[n-1].close;
+  let o;
+  o=formatDelta(curr,candles[n-2].close); setTextColored(d1El,o.txt,o.dir);
+  o=formatDelta(curr,candles[n-4].close); setTextColored(d3El,o.txt,o.dir);
+  o=formatDelta(curr,candles[n-6].close); setTextColored(d5El,o.txt,o.dir);
+  o=formatDelta(curr,candles[n-11].close); setTextColored(d10El,o.txt,o.dir);
 }
 
-function updateActiveTradeUI(){
-  if (!activeTrade){
-    tStateEl.textContent = "NONE";
-    tDirEl.textContent = "—";
-    tEntryEl.textContent = "—";
-    tEndEl.textContent = "—";
+/* pullback tracker */
+let pbTrades=[];
+const LS_ACTIVE="btc_pb_active_trade_time_v1";
+let pbActive=null;
+function loadActive(){ try{ pbActive=JSON.parse(localStorage.getItem(LS_ACTIVE)||"null"); }catch{ pbActive=null; } }
+function saveActive(){ try{ localStorage.setItem(LS_ACTIVE, JSON.stringify(pbActive)); }catch{} }
+function clearActive(){ pbActive=null; saveActive(); }
+loadActive();
+
+function findIdxByTime(t){
+  for (let i=candles.length-1;i>=0;i--) if (candles[i]?.time===t) return i;
+  return -1;
+}
+function detectTriggerAt(i){
+  if (i<1) return null;
+  const a=candles[i-1], b=candles[i];
+  if(!a||!b) return null;
+  const rng=Math.max(1e-9,(a.high-a.low));
+  const body=Math.abs(a.close-a.open);
+  const smallBody=(body/rng)<0.45;
+  if ((a.close<a.open) && smallBody && (b.high>a.high)) return {dir:"UP"};
+  if ((a.close>a.open) && smallBody && (b.low<a.low)) return {dir:"DOWN"};
+  return null;
+}
+function maybeStartTrade(){
+  const n=candles.length;
+  if (n<3) return;
+  if (pbActive?.startTime) return;
+  const i=n-1;
+  const c=candles[i];
+  if(!c?.closed) return;
+  const trig=detectTriggerAt(i);
+  if(!trig) return;
+  pbActive={dir:trig.dir,startTime:c.time,startClose:c.close};
+  saveActive();
+}
+function updateOutcome(){
+  if(!pbActive?.startTime) return;
+  const sIdx=findIdxByTime(pbActive.startTime);
+  if (sIdx<0){ clearActive(); return; }
+  const eIdx=sIdx+10;
+  if (eIdx>=candles.length) return;
+  const endC=candles[eIdx];
+  if (!endC?.closed) return;
+  const win = pbActive.dir==="UP" ? (endC.close>pbActive.startClose) : (endC.close<pbActive.startClose);
+  const outcome=win?"WIN":"LOSS";
+  pbTrades.push({dir:pbActive.dir,startTime:pbActive.startTime,startClose:pbActive.startClose,endTime:endC.time,endClose:endC.close,outcome});
+  if (pbTrades.length>50) pbTrades.shift();
+  clearActive();
+}
+
+/* trend + setup */
+function computeChopScore(absSlopePct, avgBody5){
+  const slopeComp = clamp(1-(absSlopePct/0.050),0,1)*100;
+  const bodyComp  = clamp((0.45-avgBody5)/0.45,0,1)*100;
+  return Math.round(clamp(0.70*slopeComp + 0.30*bodyComp,0,100));
+}
+function bodyPct(i){
+  const c=candles[i]; if(!c) return 0;
+  const r=Math.max(1e-9,(c.high-c.low));
+  return Math.abs(c.close-c.open)/r;
+}
+function avgBody(lastN){
+  const n=candles.length; if(n<lastN) return 0;
+  let s=0; for(let i=n-lastN;i<n;i++) s+=bodyPct(i);
+  return s/lastN;
+}
+function rangePct(i){
+  const c=candles[i]; if(!c) return 0;
+  return ((c.high-c.low)/Math.max(1e-9,c.close))*100;
+}
+function computeTrendAndSetup(){
+  const n=candles.length;
+  if (n<60 || emaFast.length!==n || emaSlow.length!==n){
+    trendEl.textContent="—";
+    setupEl.textContent="WARMING";
+    scoreEl.textContent="—";
+    chopEl.textContent="—";
+    setChip(chipTrend,"—");
+    setChip(chipSetup,"—");
+    setPill(trendPill,"neu");
+    setPill(setupPill,"neu");
     return;
   }
-  tStateEl.textContent = activeTrade.settled ? "SETTLED" : "ACTIVE";
-  tDirEl.textContent = activeTrade.dir;
-  tEntryEl.textContent = `${fmtPrice(activeTrade.entry)} @ ${new Date(activeTrade.startTMs).toLocaleTimeString("en-IN",{timeZone:"Asia/Kolkata"})}`;
-  tEndEl.textContent = activeTrade.endTMs ? new Date(activeTrade.endTMs).toLocaleTimeString("en-IN",{timeZone:"Asia/Kolkata"}) : "—";
+  const i=n-1;
+  const close=candles[i].close;
+  const ef=emaFast[i], es=emaSlow[i];
+  const ef_5=emaFast[i-5];
+  const slopePct=(((ef-ef_5)/Math.max(1e-9,close))*100)/5;
+  const absSlopePct=Math.abs(slopePct);
+
+  const aboveFast=close>=ef;
+  const aboveSlow=close>=es;
+  const bodyOk=bodyPct(i)>=0.30;
+
+  const chopScore=computeChopScore(absSlopePct, avgBody(5));
+  chopEl.textContent=String(chopScore);
+
+  let trend="NEUTRAL";
+  const biasUp=aboveFast && aboveSlow && slopePct>0.010;
+  const biasDown=(!aboveFast)&&(!aboveSlow)&&slopePct<-0.010;
+  if (chopScore<65 && bodyOk && biasUp) trend="UP";
+  else if (chopScore<65 && bodyOk && biasDown) trend="DOWN";
+
+  trendEl.textContent=trend;
+  setChip(chipTrend, trend);
+  setPill(trendPill, trend==="UP"?"good":trend==="DOWN"?"bad":"neu");
+
+  const vz=volZ(candles[i].volume);
+  let strength=0;
+  strength += clamp(absSlopePct*1200,0,55);
+  strength += clamp(Math.abs((close-ef)/Math.max(1e-9,close))*100*8,0,20);
+  strength += (aboveSlow?10:0);
+  strength += (bodyOk?5:0);
+  strength=Math.round(clamp(strength,0,100));
+
+  let sustain=0;
+  sustain += clamp(strength*0.65,0,65);
+  if (Number.isFinite(vz)) sustain += clamp((vz+0.5)*12,0,18);
+  sustain += clamp((1.2-rangePct(i))*10,0,10);
+  if (chopScore<65) sustain += 7;
+  sustain=Math.round(clamp(sustain,0,100));
+
+  let score=0;
+  score += clamp(strength*0.60,0,60);
+  score += clamp(sustain*0.25,0,25);
+  if (Number.isFinite(vz)) score += clamp((vz+0.5)*8,0,10);
+  score += clamp((100-chopScore)*0.05,0,5);
+  score=Math.round(clamp(score,0,100));
+  scoreEl.textContent=String(score);
+
+  const gateTrend=(trend==="UP"||trend==="DOWN");
+  const gateStrength=strength>=CONFIG.TH.MIN_STRENGTH;
+  const gateChop=chopScore<CONFIG.TH.MAX_CHOP;
+  const gateVol=Number.isFinite(vz) && vz>=CONFIG.TH.MIN_VOLZ;
+
+  let setup="WAIT";
+  if (gateTrend && gateStrength && gateChop && gateVol) setup = trend==="UP"?"UP(10m)":"DOWN(10m)";
+  setupEl.textContent=setup;
+  setChip(chipSetup, setup);
+  setPill(setupPill, setup.startsWith("UP")?"good":setup.startsWith("DOWN")?"bad":"neu");
 }
 
-function engineOnClosedCandle(){
-  const n = candles.length;
-  if (n < Math.max(EMA_SLOW+5, 60)) {
-    pill.textContent = `Warming… (${n}/60)`;
-    actionEl.textContent = "WAIT";
-    reasonEl.textContent = "Need more candles…";
-    opScoreEl.textContent = "—";
-    setTag(trendTag,"—");
-    setTag(setupTag,"—");
-    return;
-  }
-
-  const i = n-1;
-  const c = candles[i];
-  const e9 = emaFast[i];
-  const e21 = emaSlow[i];
-  const k = kama[i];
-
-  ema9El.textContent = fmtPrice(e9);
-  ema21El.textContent = fmtPrice(e21);
-  kamaEl.textContent = fmtPrice(k);
-
-  const kSlope = (k - kama[i-3]) / Math.max(1e-9, c.c) * 100;
-  kamaSEl.textContent = `${kSlope>=0?"+":""}${kSlope.toFixed(3)}%`;
-
-  const up = (e9 > e21) && (c.c >= e9);
-  const down = (e9 < e21) && (c.c <= e9);
-  const trend = up ? "UP" : down ? "DOWN" : "NEUTRAL";
-  setTag(trendTag, trend);
-  trendStateEl.textContent = trend;
-  trendAtEl.textContent = `Updated: ${istTimeStr()}`;
-
-  const vz = volZ(c.v);
-  volzEl.textContent = Number.isFinite(vz) ? vz.toFixed(2) : "—";
-  const volOk = Number.isFinite(vz) ? (vz >= MIN_VOLZ) : false;
-
-  const stretchPct = Math.abs(pctDiff(c.c, e9));
-  stretchEl.textContent = `${stretchPct.toFixed(3)}%`;
-  const stretchOk = stretchPct <= MAX_STRETCH_PCT;
-
-  const start = Math.max(0, i - PB_LOOKBACK);
-  let swingHigh = -Infinity, swingLow = Infinity;
-  for (let j=start;j<=i;j++){
-    swingHigh = Math.max(swingHigh, candles[j].h);
-    swingLow  = Math.min(swingLow,  candles[j].l);
-  }
-
-  if (!pbState.armed){
-    if (trend === "UP"){
-      const pullC = candles[i-1];
-      const pullIsDown = pullC.c < pullC.o;
-      const pullBodyOk = candleBodyRatio(pullC) <= PB_BODY_MAX;
-      const nearE9 = Math.abs(pctDiff(pullC.c, emaFast[i-1])) <= 0.18;
-      if (pullIsDown && pullBodyOk && nearE9){
-        pbState = { armed:true, dir:"UP", armedAtTMs:pullC.tMs, expiresTMs:pullC.tMs + (BREAK_WITHIN*60*1000), why:"PB near EMA9" };
-      }
-    } else if (trend === "DOWN"){
-      const pullC = candles[i-1];
-      const pullIsUp = pullC.c > pullC.o;
-      const pullBodyOk = candleBodyRatio(pullC) <= PB_BODY_MAX;
-      const nearE9 = Math.abs(pctDiff(pullC.c, emaFast[i-1])) <= 0.18;
-      if (pullIsUp && pullBodyOk && nearE9){
-        pbState = { armed:true, dir:"DOWN", armedAtTMs:pullC.tMs, expiresTMs:pullC.tMs + (BREAK_WITHIN*60*1000), why:"PB near EMA9" };
-      }
-    }
+/* active ui */
+function updateActiveUI(){
+  if (pbActive?.startTime){
+    const sIdx=findIdxByTime(pbActive.startTime);
+    const eIdx=sIdx>=0?sIdx+10:-1;
+    activeEl.textContent="C0 → C10";
+    const c0=sIdx>=0?fmtPrice(pbActive.startClose):"—";
+    const c10=(eIdx>=0 && candles[eIdx])?fmtPrice(candles[eIdx].close):"—";
+    activeSubEl.textContent=`C0 ${c0} • C10 ${c10}`;
   } else {
-    if (c.tMs > pbState.expiresTMs){ pbState = { armed:false, dir:"", armedAtTMs:0, expiresTMs:0, why:"" }; }
-  }
-
-  pbEl.textContent = pbState.armed ? `${pbState.dir} ARMED` : "NO";
-
-  let breakOk = false;
-  if (pbState.armed){
-    if (pbState.dir === "UP"){
-      breakOk = c.c > swingHigh;
-      brkEl.textContent = breakOk ? "YES (close>high)" : "NO";
-    } else {
-      breakOk = c.c < swingLow;
-      brkEl.textContent = breakOk ? "YES (close<low)" : "NO";
-    }
-  } else {
-    brkEl.textContent = "—";
-  }
-
-  let score = 0;
-  score += trend === "UP" || trend === "DOWN" ? 35 : 0;
-  score += volOk ? 20 : 0;
-  score += stretchOk ? 15 : 0;
-  score += (pbState.armed ? 10 : 0);
-  score += (breakOk ? 20 : 0);
-  score = Math.round(clamp(score,0,100));
-  scoreEl.textContent = String(score);
-  opScoreEl.textContent = String(score);
-
-  let action = "WAIT";
-  let reason = "Warming…";
-  let setup = "—";
-
-  if (trend === "NEUTRAL") reason = "Trend neutral";
-  else if (!volOk) reason = `VOLz < ${MIN_VOLZ}`;
-  else if (!stretchOk) reason = "Too stretched";
-  else if (!pbState.armed) reason = "No pullback";
-  else if (!breakOk) reason = "Waiting break";
-  else reason = "Signal OK";
-
-  if (!activeTrade && trend !== "NEUTRAL" && volOk && stretchOk && pbState.armed && breakOk){
-    action = pbState.dir === "UP" ? "UP" : "DOWN";
-    setup = action;
-  } else {
-    setup = activeTrade ? "TRADE ACTIVE" : "WAIT";
-  }
-
-  actionEl.textContent = action === "UP" ? "UP (MANUAL)" : action === "DOWN" ? "DOWN (MANUAL)" : "WAIT";
-  reasonEl.textContent = reason;
-  setTag(setupTag, action);
-
-  if (trend === "UP") { setBox(trendBox,"good"); trendWhyEl.textContent = "EMA9>EMA21 & price>=EMA9"; }
-  else if (trend === "DOWN") { setBox(trendBox,"bad"); trendWhyEl.textContent = "EMA9<EMA21 & price<=EMA9"; }
-  else { setBox(trendBox,"mid"); trendWhyEl.textContent = "Mixed / crossing"; }
-
-  if (action === "UP") setBox(opBox,"good");
-  else if (action === "DOWN") setBox(opBox,"bad");
-  else setBox(opBox, (!volOk || !stretchOk) ? "bad" : "mid");
-
-  pill.textContent = `TF: 1m • EMA${EMA_FAST}/${EMA_SLOW} • KAMA(${KAMA_LEN}) • Close-only`;
-
-  // Store "manual" signal marker to render on chart (latest candle)
-  if (action === "UP" || action === "DOWN"){
-    lastSignal = { dir:action, tMs:c.tMs, price:c.c, label:action };
-  }
-
-  // Optional ENTRY/RESULT logging: keep as before (only logs when a trade is created/settled)
-  if (!activeTrade && (action === "UP" || action === "DOWN")){
-    const dir = action;
-    const startTMs = c.tMs;
-    const entry = c.c;
-    const endTMs = startTMs + (C10_OFFSET * 60 * 1000);
-
-    activeTrade = { startTMs, dir, entry, endTMs, endIdx:null, settled:false };
-    pbState = { armed:false, dir:"", armedAtTMs:0, expiresTMs:0, why:"" };
-    updateActiveTradeUI();
-
-    const eventId = `ENTRY-${SYMBOL}-${startTMs}-${dir}`;
-    logEvent({
-      event:"ENTRY",
-      exchange:"MEXC",
-      symbol:SYMBOL,
-      dir,
-      entryPrice:entry,
-      mode:"CLOSE_ONLY",
-      eventId,
-      score,
-      volZ: Number.isFinite(vz)?Number(vz.toFixed(2)):"",
-      stretchPct: Number(stretchPct.toFixed(3)),
-      trend,
-      pullbackState: "ARMED",
-      breakState: breakOk ? "YES" : "NO",
-      ema9: Number(e9.toFixed(2)),
-      ema21: Number(e21.toFixed(2)),
-      kama: Number(k.toFixed(2)),
-      kamaSlope: Number(kSlope.toFixed(3)),
-      note: "manual aid"
-    }).catch(()=>{});
-  }
-
-  if (activeTrade && !activeTrade.settled){
-    const endIdx = candles.findIndex(x => x.tMs === activeTrade.endTMs);
-    if (endIdx !== -1){
-      activeTrade.endIdx = endIdx;
-      const endClose = candles[endIdx].c;
-      const win = activeTrade.dir === "UP" ? (endClose > activeTrade.entry) : (endClose < activeTrade.entry);
-      const result = win ? "WIN" : "LOSS";
-      activeTrade.settled = true;
-      updateActiveTradeUI();
-
-      const eventId = `RESULT-${SYMBOL}-${activeTrade.startTMs}-${activeTrade.dir}`;
-      logEvent({
-        event:"RESULT",
-        exchange:"MEXC",
-        symbol:SYMBOL,
-        dir:activeTrade.dir,
-        entryPrice:activeTrade.entry,
-        c10Price:endClose,
-        result,
-        mode:"CLOSE_ONLY",
-        eventId,
-        note:`C10=${C10_OFFSET} endIdx=${endIdx}`
-      }).catch(()=>{});
-    }
+    activeEl.textContent="—";
+    activeSubEl.textContent="C0 — • C10 —";
   }
 }
 
-/* =========================================================
-   REST warmup (kline via Worker proxy)
-========================================================= */
-async function warmupREST(limit=240){
-  const nowSec = Math.floor(Date.now()/1000);
-  const end = nowSec;
-  const start = nowSec - (limit * 60);
-  const url = `${MEXC_REST_BASE}/kline?symbol=${encodeURIComponent(SYMBOL)}&interval=${encodeURIComponent(REST_INTERVAL)}&start=${start}&end=${end}`;
+/* chart */
+const chart = { cv:$("cv"), ctx:null, dpr:1, panX:0, zoom:1, isDown:false, lastX:0, rightPadPct:0.30, baseBars:90 };
 
-  restStateEl.textContent = "Loading…";
-  footerEl.textContent = `Engine: REST warmup…`;
-
-  const res = await fetch(url);
-  const j = await res.json();
-
-  if (!j || !j.success || !j.data || !Array.isArray(j.data.time)){
-    restStateEl.textContent = "FAIL";
-    throw new Error("REST warmup failed");
+function drawLineSeries(ctx,start,end,pxPerBar,arr,yFn,stroke,width){
+  ctx.strokeStyle=stroke; ctx.lineWidth=width||1.5;
+  ctx.beginPath();
+  for(let i=start;i<=end;i++){
+    const x=(i-start)*pxPerBar+0.5;
+    const yy=yFn(arr[i]);
+    if(i===start) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);
   }
-
-  const t = j.data.time;
-  const o = j.data.open;
-  const h = j.data.high;
-  const l = j.data.low;
-  const c = j.data.close;
-  const v = j.data.vol ?? j.data.volume ?? j.data.q ?? [];
-
-  candles = t.map((ts, i) => ({
-    tMs: Number(ts)*1000,
-    o: Number(o[i]),
-    h: Number(h[i]),
-    l: Number(l[i]),
-    c: Number(c[i]),
-    v: Number(v[i] ?? 0),
-    closed:true
-  }));
-
-  rebuildIndicators();
-  restStateEl.textContent = "OK";
+  ctx.stroke();
 }
+function drawLabelBox(ctx,x,y,text,color){
+  ctx.font="12px system-ui";
+  const pad=6;
+  const w=Math.ceil(ctx.measureText(text).width)+pad*2;
+  const h=20;
+  const W=chart.cv.getBoundingClientRect().width;
+  const H=chart.cv.getBoundingClientRect().height;
+  const xx=Math.max(6,Math.min(x,W-w-6));
+  const yy=Math.max(6,Math.min(y,H-h-6));
+  ctx.fillStyle="rgba(0,0,0,0.60)";
+  ctx.fillRect(xx,yy,w,h);
+  ctx.strokeStyle="rgba(255,255,255,0.10)";
+  ctx.strokeRect(xx+0.5,yy+0.5,w-1,h-1);
+  ctx.fillStyle=color;
+  ctx.fillText(text,xx+pad,yy+14);
+}
+function drawOneTrade(ctx,t,viewStart,viewEnd,pxPerBar,yFn,H){
+  const isUp=t.dir==="UP";
+  const col=isUp?"rgba(34,197,94,0.95)":"rgba(239,68,68,0.95)";
+  const glyph=isUp?"▲":"▼";
+  const safeY=(yy)=>Math.max(10,Math.min(H-10,yy));
 
-/* =========================================================
-   WS feed
-========================================================= */
-let ws=null;
-let pingTimer=null;
-
-function connectWS(){
-  feedEl.textContent = "Connecting…";
-  feedEl.className = "flat";
-
-  if (ws) try{ ws.close(); }catch{}
-  ws = new WebSocket(MEXC_WS);
-
-  ws.onopen = ()=>{
-    wsStateEl.textContent = "OPEN";
-    feedEl.textContent = "Live";
-    feedEl.className = "up";
-
-    ws.send(JSON.stringify({
-      method:"sub.kline",
-      param:{ symbol:SYMBOL, interval:WS_INTERVAL },
-      gzip:false
-    }));
-
-    clearInterval(pingTimer);
-    pingTimer = setInterval(()=>{
-      if (ws && ws.readyState===1) ws.send(JSON.stringify({method:"ping"}));
-    },15000);
-
-    footerEl.textContent = "Engine: WS connected • waiting kline…";
+  if (t.startIdx>=viewStart && t.startIdx<=viewEnd){
+    const c0=candles[t.startIdx];
+    const x0=(t.startIdx-viewStart)*pxPerBar + 6;
+    const yAnchor=isUp?yFn(c0.low):yFn(c0.high);
+    const y0=safeY(isUp?(yAnchor+22):(yAnchor-44));
+    ctx.font="18px system-ui"; ctx.fillStyle=col;
+    ctx.fillText(glyph,x0,y0+18);
+    drawLabelBox(ctx,x0+18,y0+2,"C0","rgba(255,255,255,0.75)");
+  }
+  const mini=(idx,label)=>{
+    if (idx<viewStart || idx>viewEnd) return;
+    const c=candles[idx]; if(!c) return;
+    const x=(idx-viewStart)*pxPerBar + 12;
+    const y=safeY(yFn(c.close)-10);
+    ctx.beginPath(); ctx.fillStyle="rgba(255,255,255,0.35)";
+    ctx.arc(x,y,3,0,Math.PI*2); ctx.fill();
+    ctx.font="10px system-ui"; ctx.fillStyle="rgba(255,255,255,0.35)";
+    ctx.fillText(label,x+6,y+3);
   };
+  mini(t.startIdx+1,"C1"); mini(t.startIdx+2,"C2");
 
-  ws.onmessage = (evt)=>{
-    let msg; try{ msg = JSON.parse(evt.data); }catch{ return; }
-    if (msg.channel === "pong") return;
-
-    if (msg.channel === "push.kline" && msg.data && msg.data.symbol === SYMBOL){
-      const d = msg.data;
-      const tSec = Number(d.t);
-      if (!Number.isFinite(tSec)) return;
-
-      const tMs = tSec*1000;
-      const o = Number(d.o), h = Number(d.h), l = Number(d.l), c = Number(d.c);
-      const v = Number(d.v ?? d.q ?? 0);
-
-      if (Number.isFinite(c)){
-        if (!Number.isFinite(lastPrice)) setDir("flat");
-        else if (c > lastPrice) setDir("up");
-        else if (c < lastPrice) setDir("down");
-        else setDir("flat");
-        lastPrice = c;
-        priceEl.textContent = fmtPrice(c);
-        lastEl.textContent = fmtPrice(c);
-        timeEl.textContent = istTimeStr();
-      }
-
-      const last = candles[candles.length-1];
-      const isNew = !last || last.tMs !== tMs;
-
-      if (isNew){
-        candles.push({ tMs, o, h, l, c, v, closed:true });
-        if (candles.length > 700) candles.shift();
-
-        const i = candles.length-1;
-        const close = candles[i].c;
-        const prevEF = emaFast[i-1] ?? close;
-        const prevES = emaSlow[i-1] ?? close;
-        emaFast.push(emaNext(prevEF, close, EMA_FAST));
-        emaSlow.push(emaNext(prevES, close, EMA_SLOW));
-
-        const closes = candles.map(x=>x.c);
-        const prevK = kama[i-1] ?? close;
-        kama.push(kamaNext(prevK, closes, i));
-
-        volPush(v);
-        lastCloseEl.textContent = new Date(tMs).toLocaleTimeString("en-IN",{timeZone:"Asia/Kolkata"});
-
-        engineOnClosedCandle();
-        computeDeltas();
-        updateActiveTradeUI();
-        draw();
-
-      } else {
-        last.o=o; last.h=h; last.l=l; last.c=c; last.v=v;
-        draw();
-      }
+  if (t.endIdx>=viewStart && t.endIdx<=viewEnd){
+    const x10=(t.endIdx-viewStart)*pxPerBar + 10;
+    const c10=candles[t.endIdx];
+    if (t.outcome==="PENDING"){
+      drawLabelBox(ctx,x10,8,"C10 …","rgba(255,255,255,0.35)");
+    } else if (c10){
+      const win=t.outcome==="WIN";
+      const col10=win?"rgba(34,197,94,0.95)":"rgba(239,68,68,0.95)";
+      const y10=safeY(yFn(c10.close));
+      ctx.beginPath(); ctx.fillStyle=col10;
+      ctx.arc(x10+2,y10-4,4,0,Math.PI*2); ctx.fill();
+      const yLbl=(y10<H*0.5)?(y10+10):(y10-30);
+      drawLabelBox(ctx,x10+12,yLbl,`C10 ${t.outcome}`,col10);
     }
-  };
-
-  ws.onclose = ()=>{
-    wsStateEl.textContent = "CLOSED";
-    feedEl.textContent = "Reconnecting…";
-    feedEl.className = "flat";
-    clearInterval(pingTimer);
-    pingTimer=null;
-    setTimeout(connectWS, 1500);
-  };
-
-  ws.onerror = ()=>{
-    wsStateEl.textContent = "ERROR";
-    feedEl.textContent = "Error";
-    feedEl.className = "down";
-  };
+  }
 }
 
-/* =========================================================
-   Chart (Canvas)
-========================================================= */
-const cv = document.getElementById("cv");
-const ctx = cv.getContext("2d");
+chart.draw = function(){
+  const ctx=chart.ctx;
+  const W=chart.cv.getBoundingClientRect().width;
+  const H=chart.cv.getBoundingClientRect().height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle="rgba(0,0,0,0.10)";
+  ctx.fillRect(0,0,W,H);
 
-const view = { panX:0, zoom:1.0, isDown:false, lastX:0, pinch:null };
+  const n=candles.length;
+  if (n<10) return;
 
-function resize(){
-  const dpr = Math.max(1, window.devicePixelRatio || 1);
-  const rect = cv.getBoundingClientRect();
-  cv.width  = Math.floor(rect.width * dpr);
-  cv.height = Math.floor(rect.height * dpr);
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  draw();
+  const bars=Math.max(30,Math.floor(chart.baseBars/chart.zoom));
+  const rightPadPx=Math.floor(W*chart.rightPadPct);
+  const pxPerBar=(W-rightPadPx)/bars;
+
+  const shiftBars=Math.round(chart.panX/Math.max(2,pxPerBar));
+  const end=(n-1)-shiftBars;
+  const start=Math.max(0,end-bars+1);
+
+  let hi=-Infinity, lo=Infinity;
+  for(let i=start;i<=end;i++){
+    const c=candles[i]; if(!c) continue;
+    hi=Math.max(hi,c.high); lo=Math.min(lo,c.low);
+  }
+  if(!Number.isFinite(hi)||!Number.isFinite(lo)||hi===lo) return;
+  const pad=(hi-lo)*0.08; hi+=pad; lo-=pad;
+  const yFn=(p)=>{ const t=(p-lo)/(hi-lo); return H - t*H; };
+
+  ctx.strokeStyle="rgba(255,255,255,0.05)"; ctx.lineWidth=1;
+  for(let gx=0;gx<=10;gx++){ const xg=(gx/10)*W; ctx.beginPath(); ctx.moveTo(xg,0); ctx.lineTo(xg,H); ctx.stroke(); }
+  for(let gy=0;gy<=6;gy++){ const yg=(gy/6)*H; ctx.beginPath(); ctx.moveTo(0,yg); ctx.lineTo(W,yg); ctx.stroke(); }
+
+  if (emaFast.length===n) drawLineSeries(ctx,start,end,pxPerBar,emaFast,yFn,"rgba(200,210,225,0.35)",2.0);
+  if (emaSlow.length===n) drawLineSeries(ctx,start,end,pxPerBar,emaSlow,yFn,"rgba(200,210,225,0.20)",1.6);
+
+  for(let i=start;i<=end;i++){
+    const c=candles[i];
+    const x0=(i-start)*pxPerBar;
+    const cx=x0+0.5;
+    const o=yFn(c.open), cl=yFn(c.close), h=yFn(c.high), l=yFn(c.low);
+    const isUp=c.close>=c.open;
+
+    ctx.strokeStyle="rgba(255,255,255,0.16)";
+    ctx.beginPath(); ctx.moveTo(cx,h); ctx.lineTo(cx,l); ctx.stroke();
+
+    const bw=Math.max(3,pxPerBar*0.55);
+    const bx=cx-bw/2;
+    const top=Math.min(o,cl);
+    const bh=Math.max(2,Math.abs(cl-o));
+    ctx.fillStyle=isUp?"rgba(34,197,94,0.95)":"rgba(239,68,68,0.95)";
+    ctx.fillRect(bx,top,bw,bh);
+  }
+
+  const drawList=[];
+  if (pbActive?.startTime){
+    const sIdx=findIdxByTime(pbActive.startTime);
+    if (sIdx>=0) drawList.push({dir:pbActive.dir,startIdx:sIdx,endIdx:sIdx+10,outcome:"PENDING"});
+  }
+  for (const t of pbTrades.slice(-2)){
+    const sIdx=findIdxByTime(t.startTime);
+    const eIdx=findIdxByTime(t.endTime);
+    if (sIdx>=0 && eIdx>=0) drawList.push({dir:t.dir,startIdx:sIdx,endIdx:eIdx,outcome:t.outcome});
+  }
+  for (const t of drawList){
+    if (t.endIdx<start || t.startIdx>end) continue;
+    drawOneTrade(ctx,t,start,end,pxPerBar,yFn,H);
+  }
+
+  ctx.fillStyle="rgba(0,0,0,0.18)";
+  ctx.fillRect(W-rightPadPx,0,rightPadPx,H);
+  ctx.strokeStyle="rgba(255,255,255,0.06)";
+  ctx.beginPath(); ctx.moveTo(W-rightPadPx,0); ctx.lineTo(W-rightPadPx,H); ctx.stroke();
+};
+
+function chartResize(){
+  const rect=chart.cv.getBoundingClientRect();
+  chart.dpr=Math.max(1,window.devicePixelRatio||1);
+  chart.cv.width=Math.floor(rect.width*chart.dpr);
+  chart.cv.height=Math.floor(rect.height*chart.dpr);
+  chart.ctx.setTransform(chart.dpr,0,0,chart.dpr,0,0);
+  chart.draw();
 }
 
-function resetView(){ view.panX=0; view.zoom=1.0; draw(); }
+chart.ctx = chart.cv.getContext("2d");
+new ResizeObserver(()=>chartResize()).observe(chart.cv);
+window.addEventListener("resize", ()=>chartResize());
 
-function draw(){
-  const w = cv.getBoundingClientRect().width;
-  const h = cv.getBoundingClientRect().height;
-  ctx.clearRect(0,0,w,h);
-  ctx.fillStyle = "rgba(0,0,0,0.18)";
-  ctx.fillRect(0,0,w,h);
-
-  const n = candles.length;
-  if (n < 5) return;
-
-  const rightPad = 0.30;
-  const usableW = w * (1 - rightPad);
-  const barW = clamp(7 * view.zoom, 3, 18);
-  const gap = 2;
-  const step = barW + gap;
-  const barsFit = Math.floor(usableW / step);
-  const end = n;
-  const start = Math.max(0, end - barsFit);
-
-  let hi = -Infinity, lo = Infinity;
-  for (let i=start;i<end;i++){ hi = Math.max(hi, candles[i].h); lo = Math.min(lo, candles[i].l); }
-  const pad = (hi-lo)*0.06 || 1;
-  hi += pad; lo -= pad;
-
-  function y(p){ return (h-14) - ((p - lo) / Math.max(1e-9, (hi-lo))) * (h-28); }
-
-  const baseX = 10 + view.panX;
-  let x = baseX;
-
-  // grid
-  ctx.strokeStyle = "rgba(255,255,255,0.06)";
-  ctx.lineWidth = 1;
-  for (let k=0;k<5;k++){
-    const yy = 14 + k*(h-28)/4;
-    ctx.beginPath(); ctx.moveTo(0,yy); ctx.lineTo(w,yy); ctx.stroke();
-  }
-
-  // candles
-  for (let i=start;i<end;i++){
-    const c = candles[i];
-    const up = c.c >= c.o;
-    const col = up ? "rgba(34,197,94,0.95)" : "rgba(239,68,68,0.95)";
-
-    ctx.strokeStyle = "rgba(255,255,255,0.18)";
-    ctx.beginPath(); ctx.moveTo(x+barW/2, y(c.h)); ctx.lineTo(x+barW/2, y(c.l)); ctx.stroke();
-
-    ctx.fillStyle = col;
-    const y1 = y(c.o), y2 = y(c.c);
-    const top = Math.min(y1,y2);
-    const bh = Math.max(2, Math.abs(y2-y1));
-    ctx.fillRect(x, top, barW, bh);
-
-    x += step;
-  }
-
-  function drawLine(series, color){
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    let first=true;
-    let xx = baseX;
-    for (let i=start;i<end;i++){
-      const v = series[i];
-      if (!Number.isFinite(v)) { xx += step; continue; }
-      const yy = y(v);
-      if (first){ ctx.moveTo(xx + barW/2, yy); first=false; }
-      else ctx.lineTo(xx + barW/2, yy);
-      xx += step;
-    }
-    ctx.stroke();
-  }
-
-  drawLine(emaFast, "rgba(255,255,255,0.55)");
-  drawLine(emaSlow, "rgba(255,255,255,0.28)");
-  drawLine(kama,    "rgba(250,204,21,0.70)");
-
-  // signal marker (latest)
-  if (lastSignal && lastSignal.tMs){
-    const idx = candles.findIndex(z => z.tMs === lastSignal.tMs);
-    if (idx >= start && idx < end){
-      const xx = baseX + (idx - start)*step + barW/2;
-      const yy = y(candles[idx].c);
-      const isUp = lastSignal.dir === "UP";
-      ctx.fillStyle = isUp ? "rgba(34,197,94,0.95)" : "rgba(239,68,68,0.95)";
-      ctx.beginPath(); ctx.arc(xx, yy, 7, 0, Math.PI*2); ctx.fill();
-
-      // Arrow + label
-      ctx.fillStyle = isUp ? "rgba(34,197,94,0.95)" : "rgba(239,68,68,0.95)";
-      ctx.font = "700 14px system-ui";
-      ctx.textAlign = "left";
-      ctx.fillText(isUp ? "▲ UP" : "▼ DOWN", xx + 10, yy + 5);
-    }
-  }
-
-  // active trade markers
-  if (activeTrade){
-    const sIdx = candles.findIndex(z => z.tMs === activeTrade.startTMs);
-    const eIdx = candles.findIndex(z => z.tMs === activeTrade.endTMs);
-    function xForIndex(idx){ return baseX + (idx - start)*step + barW/2; }
-
-    if (sIdx >= start && sIdx < end){
-      const xx = xForIndex(sIdx);
-      const yy = y(candles[sIdx].c);
-      ctx.fillStyle = activeTrade.dir==="UP" ? "rgba(34,197,94,0.95)" : "rgba(239,68,68,0.95)";
-      ctx.beginPath(); ctx.arc(xx, yy, 6, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = "rgba(0,0,0,0.75)";
-      ctx.fillRect(xx-18, yy-30, 36, 18);
-      ctx.fillStyle = "rgba(255,255,255,0.95)";
-      ctx.font = "12px system-ui";
-      ctx.textAlign = "center";
-      ctx.fillText("C0", xx, yy-17);
-    }
-
-    if (eIdx >= start && eIdx < end){
-      const xx = xForIndex(eIdx);
-      const yy = y(candles[eIdx].c);
-      ctx.fillStyle = "rgba(255,255,255,0.95)";
-      ctx.beginPath(); ctx.arc(xx, yy, 6, 0, Math.PI*2); ctx.fill();
-
-      if (activeTrade.settled){
-        const endClose = candles[eIdx].c;
-        const win = activeTrade.dir==="UP" ? (endClose > activeTrade.entry) : (endClose < activeTrade.entry);
-        const label = win ? "WIN" : "LOSS";
-        ctx.fillStyle = win ? "rgba(34,197,94,0.95)" : "rgba(239,68,68,0.95)";
-        ctx.fillRect(xx-28, yy-30, 56, 18);
-        ctx.fillStyle = "rgba(0,0,0,0.90)";
-        ctx.font = "12px system-ui";
-        ctx.textAlign = "center";
-        ctx.fillText(label, xx, yy-17);
-      } else {
-        ctx.fillStyle = "rgba(0,0,0,0.75)";
-        ctx.fillRect(xx-20, yy-30, 40, 18);
-        ctx.fillStyle = "rgba(255,255,255,0.95)";
-        ctx.font = "12px system-ui";
-        ctx.textAlign = "center";
-        ctx.fillText("C10", xx, yy-17);
-      }
-    }
-  }
-
-  ctx.fillStyle = "rgba(255,255,255,0.02)";
-  ctx.fillRect(usableW, 0, w-usableW, h);
-}
-
-/* pan */
-cv.addEventListener("mousedown",(e)=>{ view.isDown=true; view.lastX=e.clientX; },{passive:true});
-window.addEventListener("mouseup",()=>{ view.isDown=false; },{passive:true});
-window.addEventListener("mousemove",(e)=>{ if(!view.isDown) return; const dx=e.clientX-view.lastX; view.lastX=e.clientX; view.panX+=dx; draw(); },{passive:true});
-
-/* wheel zoom */
-cv.addEventListener("wheel",(e)=>{
+chart.cv.addEventListener("mousedown",(e)=>{ chart.isDown=true; chart.lastX=e.clientX; },{passive:true});
+window.addEventListener("mouseup",()=>{ chart.isDown=false; },{passive:true});
+window.addEventListener("mousemove",(e)=>{
+  if(!chart.isDown) return;
+  const dx=e.clientX-chart.lastX; chart.lastX=e.clientX;
+  chart.panX += dx; chart.draw();
+},{passive:true});
+chart.cv.addEventListener("wheel",(e)=>{
   e.preventDefault();
-  const rect=cv.getBoundingClientRect();
+  const rect=chart.cv.getBoundingClientRect();
   const mx=e.clientX-rect.left;
-  const before=view.zoom;
-  view.zoom = clamp(view.zoom * (e.deltaY>0 ? 0.92 : 1.08), 0.7, 6);
-  const k=view.zoom/before;
-  view.panX = (view.panX - mx)*k + mx;
-  draw();
+  const before=chart.zoom;
+  const delta=Math.sign(e.deltaY);
+  chart.zoom = clamp(chart.zoom*(delta>0?0.92:1.08),0.6,6);
+  const k=chart.zoom/before;
+  chart.panX=(chart.panX-mx)*k+mx;
+  chart.draw();
 },{passive:false});
+chart.cv.addEventListener("dblclick",()=>{ chart.panX=0; chart.zoom=1; chart.draw(); },{passive:true});
 
-/* reset */
-cv.addEventListener("dblclick", resetView, {passive:true});
+btnResetView.addEventListener("click",()=>{ chart.panX=0; chart.zoom=1; chart.draw(); });
+btnClearTrade.addEventListener("click",()=>{ clearActive(); updateActiveUI(); chart.draw(); });
 
-/* touch pan/pinch + double tap */
-cv.addEventListener("touchstart",(e)=>{
-  if (e.touches.length===1){ view.isDown=true; view.lastX=e.touches[0].clientX; view.pinch=null; }
-  else if (e.touches.length===2){
-    view.isDown=false;
-    const a=e.touches[0], b=e.touches[1];
-    const dx=a.clientX-b.clientX;
-    const dist=Math.sqrt(dx*dx);
-    const rect=cv.getBoundingClientRect();
-    const midX=((a.clientX+b.clientX)/2)-rect.left;
-    view.pinch={dist, midX, startZoom:view.zoom, startPanX:view.panX};
-  }
-},{passive:false});
+/* ws */
+let tickerWS=null, klineWS=null;
+function setWsState(state){
+  wsStateEl.textContent=state;
+  if (state==="OPEN"){ wsDot.classList.add("on"); wsDot.classList.remove("off"); feedEl.textContent="LIVE"; }
+  else if (state==="CLOSED"||state==="ERROR"){ wsDot.classList.remove("on"); wsDot.classList.add("off"); feedEl.textContent="OFF"; }
+  else { wsDot.classList.remove("on"); wsDot.classList.remove("off"); feedEl.textContent="—"; }
+}
+function connectTicker(){
+  if (tickerWS) try{tickerWS.close();}catch{}
+  tickerWS=new WebSocket(`${WS_BASE}/${CONFIG.SYMBOL_WS}@ticker`);
+  tickerWS.onopen=()=>{ setWsState("OPEN"); statusEl.textContent="WS live (ticker + kline)."; };
+  tickerWS.onmessage=(e)=>{
+    try{
+      const d=JSON.parse(e.data);
+      const p=Number(d.c);
+      const chg=Number(d.P);
+      if (Number.isFinite(p)){
+        if (!Number.isFinite(lastTickPrice)) setDir("flat");
+        else if (p>lastTickPrice) setDir("up");
+        else if (p<lastTickPrice) setDir("down");
+        else setDir("flat");
+        lastTickPrice=p;
+        priceEl.textContent=fmtPrice(p);
+      }
+      if (Number.isFinite(chg)){
+        const s=`${chg>=0?"+":""}${chg.toFixed(2)}%`;
+        setTextColored(chg24hEl,s, chg>0?"up":chg<0?"down":"flat");
+      }
+      timeEl.textContent=istTimeStr();
+    }catch{}
+  };
+  tickerWS.onclose=()=>{ setWsState("CLOSED"); setTimeout(connectTicker,1500); };
+  tickerWS.onerror=()=>{ setWsState("ERROR"); };
+}
+function connectKline(){
+  if (klineWS) try{klineWS.close();}catch{}
+  klineWS=new WebSocket(`${WS_BASE}/${CONFIG.SYMBOL_WS}@kline_${CONFIG.KLINE_INTERVAL}`);
+  klineWS.onmessage=(e)=>{
+    try{
+      const msg=JSON.parse(e.data);
+      const k=msg.k;
+      const bar={time:k.t,open:Number(k.o),high:Number(k.h),low:Number(k.l),close:Number(k.c),volume:Number(k.v),closed:!!k.x};
 
-cv.addEventListener("touchmove",(e)=>{
-  if (e.touches.length===1 && view.isDown){
-    e.preventDefault();
-    const x=e.touches[0].clientX;
-    const dx=x-view.lastX; view.lastX=x;
-    view.panX += dx; draw();
-  } else if (e.touches.length===2 && view.pinch){
-    e.preventDefault();
-    const a=e.touches[0], b=e.touches[1];
-    const dx=a.clientX-b.clientX;
-    const dist=Math.sqrt(dx*dx);
-    const ratio = dist / Math.max(1, view.pinch.dist);
-    const before=view.zoom;
-    view.zoom = clamp(view.pinch.startZoom * ratio, 0.7, 6);
-    const mx=view.pinch.midX;
-    const k=view.zoom/before;
-    view.panX = (view.panX - mx)*k + mx;
-    draw();
-  }
-},{passive:false});
+      const last=candles[candles.length-1];
+      if (last && last.time===bar.time){
+        candles[candles.length-1]={...last,...bar};
+        rebuildEMAs();
+        chart.draw();
+      } else if (!last || bar.time>last.time){
+        candles.push(bar);
+        if (candles.length>360) candles.shift();
+        rebuildEMAs();
+        if (bar.closed) volPush(bar.volume); else volReset();
 
-let lastTap=0;
-cv.addEventListener("touchend",()=>{ const now=Date.now(); if (now-lastTap<280) resetView(); lastTap=now; },{passive:true});
+        if (bar.closed){
+          maybeStartTrade();
+          updateOutcome();
+          updateDeltas();
+          computeTrendAndSetup();
+          updateActiveUI();
+        }
+        chart.draw();
+      }
+    }catch{}
+  };
+  klineWS.onclose=()=>setTimeout(connectKline,1500);
+}
 
-window.addEventListener("resize", resize);
-
-/* =========================================================
-   Boot
-========================================================= */
-async function start(){
-  // Ensure chart is sized correctly after first layout
-  requestAnimationFrame(()=>{ resize(); });
-  setTimeout(resize, 250);
-  document.addEventListener("visibilitychange", ()=>{ setTimeout(resize, 250); });
-  window.addEventListener("orientationchange", ()=>{ setTimeout(resize, 250); });
-  footerEl.textContent = "Engine: starting…";
+async function warmup(){
   try{
-    await warmupREST(240);
-    computeDeltas();
-    draw();
-    footerEl.textContent = "Engine: REST warmup OK • connecting WS…";
-    connectWS();
-  }catch(e){
-    footerEl.textContent = "Engine: REST failed • still attempting WS…";
-    connectWS();
+    const url=`${REST_KLINES}?symbol=${CONFIG.SYMBOL_REST}&interval=${CONFIG.KLINE_INTERVAL}&limit=220`;
+    const res=await fetch(url);
+    const raw=await res.json();
+    candles=raw.map(k=>({time:k[0],open:Number(k[1]),high:Number(k[2]),low:Number(k[3]),close:Number(k[4]),volume:Number(k[5]),closed:true}));
+    rebuildEMAs();
+    volReset();
+    updateDeltas();
+    computeTrendAndSetup();
+    updateActiveUI();
+    chart.draw();
+    statusEl.textContent="REST warmup OK • waiting WS…";
+  } catch {
+    statusEl.textContent="REST warmup failed • WS will warm up.";
   }
-  setInterval(()=>{ timeEl.textContent = istTimeStr(); }, 800);
-  updateActiveTradeUI();
+}
+
+async function start(){
+  setWsState("CONNECTING");
+  timeEl.textContent=istTimeStr();
+  await warmup();
+  connectTicker();
+  connectKline();
+  setInterval(()=>{ timeEl.textContent=istTimeStr(); }, 800);
+  setInterval(()=>{ computeTrendAndSetup(); }, 1200);
 }
 start();
 </script>
