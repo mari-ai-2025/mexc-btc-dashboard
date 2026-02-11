@@ -200,18 +200,7 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
               </div>
 
               <div class="miniGrid" style="grid-template-columns:1fr 1fr;">
-                <div class="mini">
-                  <div class="t">Logger</div>
-                  <div class="row"><span>Endpoint</span><b id="logEp">—</b></div>
-                  <div class="row"><span>Last</span><b id="logLast">—</b></div>
-                  <div style="margin-top:8px"><button class="btn" id="btnLog">Log Test</button></div>
-                </div>
-                <div class="mini">
-                  <div class="t">Engine</div>
-                  <div class="row"><span>WS</span><b id="wsState">—</b></div>
-                  <div class="row"><span>REST</span><b id="restState">—</b></div>
-                  <div class="row"><span>Last Close</span><b id="lastClose">—</b></div>
-                </div>
+                
               </div>
 
               <div class="mini" style="margin-top:10px">
@@ -1078,6 +1067,9 @@ window.addEventListener("resize", resize);
 async function start(){
   // Ensure chart is sized correctly after first layout
   requestAnimationFrame(()=>{ resize(); });
+  setTimeout(resize, 250);
+  document.addEventListener("visibilitychange", ()=>{ setTimeout(resize, 250); });
+  window.addEventListener("orientationchange", ()=>{ setTimeout(resize, 250); });
   footerEl.textContent = "Engine: starting…";
   try{
     await warmupREST(240);
