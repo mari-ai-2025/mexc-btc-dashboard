@@ -530,7 +530,7 @@ function updateActiveUI(){
 }
 
 /* chart */
-const chart = { cv:$("cv"), ctx:null, dpr:1, panX:0, zoom:1, isDown:false, lastX:0, rightPadPct:0.30, baseBars:90 };
+const chart = { cv:$("cv"), ctx:null, dpr:1, panX:0, zoom:1, isDown:false, lastX:0, rightPadPct:0.15, baseBars:90 };
 
 function drawLineSeries(ctx,start,end,pxPerBar,arr,yFn,stroke,width){
   ctx.strokeStyle=stroke; ctx.lineWidth=width||1.5;
