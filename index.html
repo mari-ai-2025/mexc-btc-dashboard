@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>BTCUSDT • 1m Futures • Pullback → 10 Candles (Chart-first)</title>
+<title>BTCUSDT • 1m Futures • Pullback → 10 Candles (Dual Mode + Manual)</title>
 <style>
 :root{
   --bg:#0b0f14;
@@ -57,6 +57,8 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
 .btn:hover{border-color:rgba(255,255,255,0.22)}
 .btn.warn{border-color:rgba(250,204,21,0.35)}
 .btn.danger{border-color:rgba(239,68,68,0.35)}
+.btn.good{border-color:rgba(34,197,94,0.35)}
+.btn.bad{border-color:rgba(239,68,68,0.35)}
 
 .smallNote{font-size:12px;color:var(--muted);margin-top:6px}
 
@@ -91,7 +93,7 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
 .pill.neu{border-color:rgba(255,255,255,0.14)}
 
 /* chart */
-.chartWrap{padding:12px 0 16px}
+.chartWrap{padding:12px 0 10px}
 .chartPanel{
   border:1px solid rgba(255,255,255,0.10);
   background:rgba(255,255,255,0.03);
@@ -117,6 +119,7 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
 .chip.good{border-color:rgba(34,197,94,0.35)}
 .chip.bad{border-color:rgba(239,68,68,0.35)}
 .chip.neu{border-color:rgba(255,255,255,0.14)}
+kbd{font:inherit; padding:2px 6px; border-radius:8px; border:1px solid rgba(255,255,255,0.14); background:rgba(0,0,0,0.18); color:var(--fg);}
 
 .chartBody{padding:12px}
 #cv{
@@ -132,7 +135,26 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
 #cv:active{cursor:grabbing}
 .noteRow{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px}
 .noteRow .chip{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.18)}
-.footer{padding:10px 0 18px;text-align:center;color:var(--muted);font-size:12px}
+
+/* manual bar */
+.manualWrap{padding:0 0 16px}
+.manualPanel{
+  border:1px solid rgba(255,255,255,0.10);
+  background:rgba(0,0,0,0.20);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  padding:12px 14px;
+}
+.row{
+  display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+}
+.leftRow{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+.rightRow{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end}
+.mini{
+  font-size:12px; color:var(--muted);
+}
+.mini b{color:var(--fg)}
+.footer{padding:0 0 18px;text-align:center;color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
@@ -157,8 +179,9 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
           <div id="arrow" class="arrow flat">●</div>
         </div>
         <div class="actions">
+          <button class="btn warn" id="btnMode" type="button" title="Switch between early heads-up and cleaner/strict mode">Mode: HYBRID</button>
           <button class="btn warn" id="btnResetView" type="button">Reset View</button>
-          <button class="btn danger" id="btnClearTrade" type="button">Clear Trade</button>
+          <button class="btn danger" id="btnClearTrade" type="button">Clear C0→C10</button>
         </div>
       </div>
 
@@ -176,7 +199,7 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
           </div>
           <div class="card">
             <div class="cardTop"><div class="cardLabel">Setup</div><div class="bigVal" id="setup">—</div></div>
-            <div class="sub"><span class="pill neu" id="setupPill">Score <b id="score">—</b>/100</span></div>
+            <div class="sub"><span class="pill neu" id="setupPill"><span id="setupModeLabel">HYBRID</span> • Score <b id="score">—</b>/100</span></div>
           </div>
           <div class="card">
             <div class="cardTop"><div class="cardLabel">Active</div><div class="bigVal" id="active">—</div></div>
@@ -208,7 +231,7 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
     <div class="wrap">
       <div class="chartPanel">
         <div class="chartHead">
-          <div class="chartTitle">Chart • 1m candles • EMA20/50 • Pullback trigger • C0/C10 outcome</div>
+          <div class="chartTitle">Chart • 1m candles • EMA20/50 • Pullback trigger • C0/C10 outcome • Manual overlay</div>
           <div class="chips">
             <span class="chip neu" id="chipTrend">Trend: <b>—</b></span>
             <span class="chip neu" id="chipSetup">Setup: <b>—</b></span>
@@ -218,10 +241,34 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
         <div class="chartBody">
           <canvas id="cv"></canvas>
           <div class="noteRow">
-            <span class="chip">Right pad: 30%</span>
-            <span class="chip">Markers: C0 ▲/▼, C1/C2 dots, C10 ● + WIN/LOSS</span>
-            <span class="chip">Active trade tracked by candle time (no drift)</span>
+            <span class="chip">Right pad: 15%</span>
+            <span class="chip">C0/C10: auto trigger + 10-candle outcome</span>
+            <span class="chip">Manual: <kbd>E</kbd> entry, <kbd>W</kbd> win, <kbd>L</kbd> loss, <kbd>X</kbd> clear</span>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="manualWrap">
+    <div class="wrap">
+      <div class="manualPanel">
+        <div class="row">
+          <div class="leftRow">
+            <span class="pill neu" id="manualStatePill">Manual: <b id="manualState">—</b></span>
+            <span class="mini">Entry: <b id="manualEntry">—</b></span>
+            <span class="mini">Dir: <b id="manualDir">—</b></span>
+            <span class="mini">P/L: <b id="manualPL">—</b></span>
+          </div>
+          <div class="rightRow">
+            <button class="btn warn" id="btnManualEntry" type="button">Mark ENTRY</button>
+            <button class="btn good" id="btnManualWin" type="button">Mark WIN</button>
+            <button class="btn bad" id="btnManualLoss" type="button">Mark LOSS</button>
+            <button class="btn danger" id="btnManualClear" type="button">Clear Manual</button>
+          </div>
+        </div>
+        <div class="smallNote" style="margin-top:10px">
+          Manual entry uses current <b>Setup</b> direction (UP(10m) / DOWN(10m)). If Setup is WAIT, ENTRY is blocked to avoid random clicks.
         </div>
       </div>
       <div class="footer">Keep this file as <b>index.html</b> in your repo, then push to GitHub/Cloudflare Pages.</div>
@@ -230,6 +277,12 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:
 </div>
 
 <script>
+/**
+ * Dual-mode logic:
+ * - STRICT: fewer trades, later but more reliable (hard gates)
+ * - EARLY: earlier heads-up (soft gates) + "CONFIRM" stage before full entry
+ * - HYBRID: EARLY heads-up, but entry uses STRICT
+ */
 const CONFIG = {
   SYMBOL_REST: "BTCUSDT",
   SYMBOL_WS: "btcusdt",
@@ -237,8 +290,38 @@ const CONFIG = {
   EMA_FAST: 20,
   EMA_SLOW: 50,
   VOL_Z_LEN: 50,
-  TH: { MIN_STRENGTH: 65, MAX_CHOP: 65, MIN_VOLZ: -0.10 }
+
+  MODES: {
+    STRICT: { // cleaner / fewer trades
+      MIN_STRENGTH: 72,
+      MAX_CHOP: 55,
+      MIN_VOLZ: 0.00,
+      MIN_SCORE_ENTRY: 72,
+      LABEL: "STRICT"
+    },
+    EARLY: { // earlier heads-up
+      MIN_STRENGTH: 55,
+      MAX_CHOP: 72,
+      MIN_VOLZ: -0.25,
+      MIN_SCORE_HEADSUP: 55,   // heads-up
+      MIN_SCORE_ENTRY: 65,     // confirm
+      LABEL: "EARLY"
+    },
+    HYBRID: { // heads-up early + strict entries
+      MIN_STRENGTH: 72,
+      MAX_CHOP: 55,
+      MIN_VOLZ: 0.00,
+      MIN_SCORE_ENTRY: 72,
+      // heads-up thresholds (like EARLY)
+      HS_MIN_STRENGTH: 55,
+      HS_MAX_CHOP: 72,
+      HS_MIN_VOLZ: -0.25,
+      HS_MIN_SCORE: 55,
+      LABEL: "HYBRID"
+    }
+  }
 };
+
 const REST_KLINES = "https://fapi.binance.com/fapi/v1/klines";
 const WS_BASE = "wss://fstream.binance.com/ws";
 
@@ -268,9 +351,22 @@ const chipTrend = $("chipTrend");
 const chipSetup = $("chipSetup");
 const trendPill = $("trendPill");
 const setupPill = $("setupPill");
+const setupModeLabel = $("setupModeLabel");
 
 const btnResetView = $("btnResetView");
 const btnClearTrade = $("btnClearTrade");
+const btnMode = $("btnMode");
+
+// manual
+const manualStateEl = $("manualState");
+const manualStatePill = $("manualStatePill");
+const manualEntryEl = $("manualEntry");
+const manualDirEl = $("manualDir");
+const manualPLEl = $("manualPL");
+const btnManualEntry = $("btnManualEntry");
+const btnManualWin = $("btnManualWin");
+const btnManualLoss = $("btnManualLoss");
+const btnManualClear = $("btnManualClear");
 
 function istTimeStr(){ return new Date().toLocaleTimeString("en-IN",{timeZone:"Asia/Kolkata"}); }
 function fmtPrice(x){
@@ -302,7 +398,29 @@ function setTextColored(el, txt, dir){
   el.textContent = txt;
 }
 
-/* state */
+/* ===================== Mode state ===================== */
+const LS_MODE = "btc_dash_mode_v1";
+const MODES = ["HYBRID","EARLY","STRICT"];
+let MODE = (localStorage.getItem(LS_MODE) || "HYBRID");
+if (!MODES.includes(MODE)) MODE = "HYBRID";
+
+function modeCfg(){ return CONFIG.MODES[MODE]; }
+function applyModeUI(){
+  btnMode.textContent = `Mode: ${MODE}`;
+  setupModeLabel.textContent = MODE;
+}
+function cycleMode(){
+  const i = MODES.indexOf(MODE);
+  MODE = MODES[(i+1) % MODES.length];
+  localStorage.setItem(LS_MODE, MODE);
+  applyModeUI();
+  computeTrendAndSetup(); // refresh immediately
+  chart.draw();
+}
+btnMode.addEventListener("click", cycleMode);
+applyModeUI();
+
+/* ===================== Market state ===================== */
 let lastTickPrice = NaN;
 let candles = [];
 let emaFast = [];
@@ -371,7 +489,7 @@ function updateDeltas(){
   o=formatDelta(curr,candles[n-11].close); setTextColored(d10El,o.txt,o.dir);
 }
 
-/* pullback tracker */
+/* ===================== Pullback tracker (C0→C10) ===================== */
 let pbTrades=[];
 const LS_ACTIVE="btc_pb_active_trade_time_v1";
 let pbActive=null;
@@ -422,7 +540,7 @@ function updateOutcome(){
   clearActive();
 }
 
-/* trend + setup */
+/* ===================== Trend + Setup ===================== */
 function computeChopScore(absSlopePct, avgBody5){
   const slopeComp = clamp(1-(absSlopePct/0.050),0,1)*100;
   const bodyComp  = clamp((0.45-avgBody5)/0.45,0,1)*100;
@@ -442,6 +560,19 @@ function rangePct(i){
   const c=candles[i]; if(!c) return 0;
   return ((c.high-c.low)/Math.max(1e-9,c.close))*100;
 }
+
+// computed each tick
+let LAST_TREND = "—";
+let LAST_SETUP = "—";
+let LAST_SCORE = NaN;
+let LAST_VOLZ = NaN;
+let LAST_CHOP = NaN;
+let LAST_STRENGTH = NaN;
+
+// EARLY pipeline: HEADS_UP then CONFIRM then ENTRY (depending on mode)
+let EARLY_STAGE = "—"; // "—" | "HEADS_UP" | "CONFIRM" | "ENTRY"
+let EARLY_DIR = "—";   // UP / DOWN
+
 function computeTrendAndSetup(){
   const n=candles.length;
   if (n<60 || emaFast.length!==n || emaSlow.length!==n){
@@ -453,8 +584,13 @@ function computeTrendAndSetup(){
     setChip(chipSetup,"—");
     setPill(trendPill,"neu");
     setPill(setupPill,"neu");
+    LAST_TREND="—"; LAST_SETUP="—"; LAST_SCORE=NaN;
+    EARLY_STAGE="—"; EARLY_DIR="—";
     return;
   }
+
+  const cfg = modeCfg();
+
   const i=n-1;
   const close=candles[i].close;
   const ef=emaFast[i], es=emaSlow[i];
@@ -480,11 +616,13 @@ function computeTrendAndSetup(){
   setPill(trendPill, trend==="UP"?"good":trend==="DOWN"?"bad":"neu");
 
   const vz=volZ(candles[i].volume);
+
   let strength=0;
   strength += clamp(absSlopePct*1200,0,55);
   strength += clamp(Math.abs((close-ef)/Math.max(1e-9,close))*100*8,0,20);
   strength += (aboveSlow?10:0);
   strength += (bodyOk?5:0);
+  strength += clamp(Math.abs((close-es)/Math.max(1e-9,close))*100*3,0,10);
   strength=Math.round(clamp(strength,0,100));
 
   let sustain=0;
@@ -500,21 +638,104 @@ function computeTrendAndSetup(){
   if (Number.isFinite(vz)) score += clamp((vz+0.5)*8,0,10);
   score += clamp((100-chopScore)*0.05,0,5);
   score=Math.round(clamp(score,0,100));
+
   scoreEl.textContent=String(score);
 
+  LAST_TREND = trend;
+  LAST_SCORE = score;
+  LAST_VOLZ = vz;
+  LAST_CHOP = chopScore;
+  LAST_STRENGTH = strength;
+
+  // --- gates helpers ---
   const gateTrend=(trend==="UP"||trend==="DOWN");
-  const gateStrength=strength>=CONFIG.TH.MIN_STRENGTH;
-  const gateChop=chopScore<CONFIG.TH.MAX_CHOP;
-  const gateVol=Number.isFinite(vz) && vz>=CONFIG.TH.MIN_VOLZ;
+  const passStrict = gateTrend
+    && (strength>=cfg.MIN_STRENGTH)
+    && (chopScore<cfg.MAX_CHOP)
+    && (Number.isFinite(vz) && vz>=cfg.MIN_VOLZ)
+    && (score>=cfg.MIN_SCORE_ENTRY);
+
+  // EARLY gating (heads-up) if mode EARLY or HYBRID
+  let headsUp = false;
+  let confirm = false;
+  if (MODE === "EARLY"){
+    const hs = cfg;
+    headsUp = gateTrend
+      && strength>=hs.MIN_STRENGTH
+      && chopScore<hs.MAX_CHOP
+      && (Number.isFinite(vz) && vz>=hs.MIN_VOLZ)
+      && score>=hs.MIN_SCORE_HEADSUP;
+
+    confirm = gateTrend
+      && strength>=hs.MIN_STRENGTH
+      && chopScore<hs.MAX_CHOP
+      && (Number.isFinite(vz) && vz>=hs.MIN_VOLZ)
+      && score>=hs.MIN_SCORE_ENTRY;
+  } else if (MODE === "HYBRID"){
+    const hs = cfg;
+    headsUp = gateTrend
+      && strength>=hs.HS_MIN_STRENGTH
+      && chopScore<hs.HS_MAX_CHOP
+      && (Number.isFinite(vz) && vz>=hs.HS_MIN_VOLZ)
+      && score>=hs.HS_MIN_SCORE;
+
+    // confirm uses strict thresholds (entry is strict)
+    confirm = passStrict;
+  }
 
   let setup="WAIT";
-  if (gateTrend && gateStrength && gateChop && gateVol) setup = trend==="UP"?"UP(10m)":"DOWN(10m)";
+  EARLY_STAGE="—"; EARLY_DIR="—";
+
+  if (MODE === "STRICT"){
+    if (passStrict) setup = (trend==="UP") ? "UP(10m)" : "DOWN(10m)";
+  } else if (MODE === "EARLY"){
+    if (headsUp){
+      EARLY_STAGE = confirm ? "CONFIRM" : "HEADS_UP";
+      EARLY_DIR = trend;
+      setup = confirm ? ((trend==="UP") ? "UP(10m)" : "DOWN(10m)") : ((trend==="UP") ? "UP heads-up" : "DOWN heads-up");
+    } else {
+      setup="WAIT";
+    }
+  } else { // HYBRID
+    if (headsUp){
+      EARLY_STAGE = confirm ? "ENTRY" : "HEADS_UP";
+      EARLY_DIR = trend;
+      setup = confirm ? ((trend==="UP") ? "UP(10m)" : "DOWN(10m)") : ((trend==="UP") ? "UP heads-up" : "DOWN heads-up");
+    } else {
+      setup="WAIT";
+    }
+  }
+
   setupEl.textContent=setup;
   setChip(chipSetup, setup);
-  setPill(setupPill, setup.startsWith("UP")?"good":setup.startsWith("DOWN")?"bad":"neu");
+  setPill(setupPill,
+    setup.startsWith("UP") ? "good" :
+    setup.startsWith("DOWN") ? "bad" : "neu"
+  );
+
+  LAST_SETUP = setup;
+
+  // status line (explain "late but wait")
+  const whyWait = [];
+  if (!gateTrend) whyWait.push("trend neutral");
+  if (gateTrend && MODE !== "EARLY"){ // strict-ish
+    if (strength < (cfg.MIN_STRENGTH || 0)) whyWait.push("strength low");
+    if (chopScore >= (cfg.MAX_CHOP || 999)) whyWait.push("chop high");
+    if (!(Number.isFinite(vz) && vz >= (cfg.MIN_VOLZ ?? -999))) whyWait.push("volZ low");
+    if (score < (cfg.MIN_SCORE_ENTRY || 0)) whyWait.push("score low");
+  } else if (MODE === "EARLY"){
+    if (!headsUp) whyWait.push("no heads-up");
+    else if (!confirm) whyWait.push("waiting confirm");
+  } else if (MODE === "HYBRID"){
+    if (!headsUp) whyWait.push("no heads-up");
+    else if (!confirm) whyWait.push("waiting strict-entry");
+  }
+
+  statusEl.textContent = `Mode ${MODE} • Trend ${trend} • Setup ${setup} • Score ${score}/100 • Chop ${chopScore} • Strength ${strength}`
+    + (whyWait.length ? ` • (${whyWait.join(", ")})` : "");
 }
 
-/* active ui */
+/* ===================== Active UI (C0→C10) ===================== */
 function updateActiveUI(){
   if (pbActive?.startTime){
     const sIdx=findIdxByTime(pbActive.startTime);
@@ -529,7 +750,117 @@ function updateActiveUI(){
   }
 }
 
-/* chart */
+/* ===================== Manual trade ===================== */
+const LS_MANUAL = "btc_manual_trade_v1";
+let manual = null; // {dir, entryTime, entryPrice, outcome, exitPrice, exitTime}
+
+function loadManual(){
+  try{ manual = JSON.parse(localStorage.getItem(LS_MANUAL) || "null"); } catch { manual=null; }
+}
+function saveManual(){
+  try{ localStorage.setItem(LS_MANUAL, JSON.stringify(manual)); } catch {}
+}
+function clearManual(){
+  manual = null;
+  saveManual();
+  updateManualUI();
+  chart.draw();
+}
+function markManualEntry(){
+  // Only allow entry if Setup is strict entry (UP(10m)/DOWN(10m))
+  const s = String(LAST_SETUP || "WAIT");
+  const dir = s.startsWith("UP") ? "UP" : s.startsWith("DOWN") ? "DOWN" : null;
+  if (!dir){
+    statusEl.textContent = `Manual ENTRY blocked: Setup is "${s}". Wait for UP(10m)/DOWN(10m).`;
+    return;
+  }
+  const price = candles.length ? candles[candles.length-1].close : (Number.isFinite(lastTickPrice)?lastTickPrice:NaN);
+  const t = candles.length ? candles[candles.length-1].time : Date.now();
+  manual = { dir, entryTime: t, entryPrice: price, outcome:"OPEN", exitPrice:null, exitTime:null };
+  saveManual();
+  updateManualUI();
+  chart.draw();
+}
+function markManualWinLoss(outcome){
+  if (!manual || manual.outcome !== "OPEN"){
+    statusEl.textContent = "Manual outcome needs an OPEN manual trade.";
+    return;
+  }
+  const price = candles.length ? candles[candles.length-1].close : (Number.isFinite(lastTickPrice)?lastTickPrice:NaN);
+  const t = candles.length ? candles[candles.length-1].time : Date.now();
+  manual.outcome = outcome;
+  manual.exitPrice = price;
+  manual.exitTime = t;
+  saveManual();
+  updateManualUI();
+  chart.draw();
+}
+function manualPL(){
+  if (!manual || !Number.isFinite(manual.entryPrice)) return null;
+  const curr = (manual.outcome === "OPEN")
+    ? (candles.length ? candles[candles.length-1].close : lastTickPrice)
+    : manual.exitPrice;
+  if (!Number.isFinite(curr)) return null;
+  const diff = (manual.dir === "UP") ? (curr - manual.entryPrice) : (manual.entryPrice - curr);
+  const pct = (diff / manual.entryPrice) * 100;
+  return { diff, pct, curr };
+}
+function updateManualUI(){
+  if (!manual){
+    manualStateEl.textContent = "—";
+    manualEntryEl.textContent = "—";
+    manualDirEl.textContent = "—";
+    manualPLEl.textContent = "—";
+    manualStatePill.classList.remove("good","bad","neu");
+    manualStatePill.classList.add("neu");
+    return;
+  }
+  manualDirEl.textContent = manual.dir;
+  manualEntryEl.textContent = fmtPrice(manual.entryPrice);
+  if (manual.outcome === "OPEN"){
+    manualStateEl.textContent = "OPEN";
+    manualStatePill.classList.remove("good","bad","neu");
+    manualStatePill.classList.add("neu");
+  } else if (manual.outcome === "WIN"){
+    manualStateEl.textContent = "WIN";
+    manualStatePill.classList.remove("good","bad","neu");
+    manualStatePill.classList.add("good");
+  } else if (manual.outcome === "LOSS"){
+    manualStateEl.textContent = "LOSS";
+    manualStatePill.classList.remove("good","bad","neu");
+    manualStatePill.classList.add("bad");
+  } else {
+    manualStateEl.textContent = manual.outcome || "—";
+    manualStatePill.classList.remove("good","bad","neu");
+    manualStatePill.classList.add("neu");
+  }
+
+  const pl = manualPL();
+  if (!pl){
+    manualPLEl.textContent = "—";
+  } else {
+    const sign = pl.diff >= 0 ? "+" : "";
+    manualPLEl.textContent = `${sign}${pl.diff.toFixed(1)} (${sign}${pl.pct.toFixed(3)}%)`;
+  }
+}
+
+btnManualEntry.addEventListener("click", markManualEntry);
+btnManualWin.addEventListener("click", ()=>markManualWinLoss("WIN"));
+btnManualLoss.addEventListener("click", ()=>markManualWinLoss("LOSS"));
+btnManualClear.addEventListener("click", clearManual);
+
+window.addEventListener("keydown", (e)=>{
+  const k = (e.key || "").toLowerCase();
+  if (k === "e") markManualEntry();
+  if (k === "w") markManualWinLoss("WIN");
+  if (k === "l") markManualWinLoss("LOSS");
+  if (k === "x") clearManual();
+});
+
+loadManual();
+updateManualUI();
+
+/* ===================== Chart ===================== */
 const chart = { cv:$("cv"), ctx:null, dpr:1, panX:0, zoom:1, isDown:false, lastX:0, rightPadPct:0.15, baseBars:90 };
 
 function drawLineSeries(ctx,start,end,pxPerBar,arr,yFn,stroke,width){
@@ -602,6 +933,30 @@ function drawOneTrade(ctx,t,viewStart,viewEnd,pxPerBar,yFn,H){
   }
 }
 
+function drawManualOverlay(ctx, viewStart, viewEnd, pxPerBar, yFn, W, H){
+  if (!manual || !Number.isFinite(manual.entryPrice)) return;
+  // horizontal entry line
+  const y = yFn(manual.entryPrice);
+  ctx.strokeStyle = manual.dir === "UP" ? "rgba(34,197,94,0.55)" : "rgba(239,68,68,0.55)";
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, y+0.5); ctx.lineTo(W, y+0.5); ctx.stroke();
+
+  // label
+  const label = (manual.outcome === "OPEN")
+    ? `MANUAL ${manual.dir} ENTRY ${fmtPrice(manual.entryPrice)}`
+    : `MANUAL ${manual.dir} ${manual.outcome} ${fmtPrice(manual.entryPrice)} → ${fmtPrice(manual.exitPrice)}`;
+  drawLabelBox(ctx, 10, y - 26, label, "rgba(255,255,255,0.85)");
+
+  // current P/L bubble
+  const pl = manualPL();
+  if (pl){
+    const sign = pl.diff >= 0 ? "+" : "";
+    const txt = `${sign}${pl.diff.toFixed(1)} (${sign}${pl.pct.toFixed(3)}%)`;
+    const col = pl.diff >= 0 ? "rgba(34,197,94,0.95)" : "rgba(239,68,68,0.95)";
+    drawLabelBox(ctx, W - 220, y - 26, txt, col);
+  }
+}
+
 chart.draw = function(){
   const ctx=chart.ctx;
   const W=chart.cv.getBoundingClientRect().width;
@@ -670,6 +1025,9 @@ chart.draw = function(){
     drawOneTrade(ctx,t,start,end,pxPerBar,yFn,H);
   }
 
+  // manual overlay on top
+  drawManualOverlay(ctx, start, end, pxPerBar, yFn, W, H);
+
   ctx.fillStyle="rgba(0,0,0,0.18)";
   ctx.fillRect(W-rightPadPx,0,rightPadPx,H);
   ctx.strokeStyle="rgba(255,255,255,0.06)";
@@ -712,7 +1070,7 @@ chart.cv.addEventListener("dblclick",()=>{ chart.panX=0; chart.zoom=1; chart.dra
 btnResetView.addEventListener("click",()=>{ chart.panX=0; chart.zoom=1; chart.draw(); });
 btnClearTrade.addEventListener("click",()=>{ clearActive(); updateActiveUI(); chart.draw(); });
 
-/* ws */
+/* ===================== WS ===================== */
 let tickerWS=null, klineWS=null;
 function setWsState(state){
   wsStateEl.textContent=state;
@@ -742,6 +1100,7 @@ function connectTicker(){
         setTextColored(chg24hEl,s, chg>0?"up":chg<0?"down":"flat");
       }
       timeEl.textContent=istTimeStr();
+      updateManualUI(); // live P/L update
     }catch{}
   };
   tickerWS.onclose=()=>{ setWsState("CLOSED"); setTimeout(connectTicker,1500); };
@@ -773,6 +1132,7 @@ function connectKline(){
           updateDeltas();
           computeTrendAndSetup();
           updateActiveUI();
+          updateManualUI();
         }
         chart.draw();
       }
@@ -792,6 +1152,7 @@ async function warmup(){
     updateDeltas();
     computeTrendAndSetup();
     updateActiveUI();
+    updateManualUI();
     chart.draw();
     statusEl.textContent="REST warmup OK • waiting WS…";
   } catch {
@@ -806,7 +1167,7 @@ async function start(){
   connectTicker();
   connectKline();
   setInterval(()=>{ timeEl.textContent=istTimeStr(); }, 800);
-  setInterval(()=>{ computeTrendAndSetup(); }, 1200);
+  setInterval(()=>{ computeTrendAndSetup(); updateManualUI(); }, 1200);
 }
 start();
 </script>
