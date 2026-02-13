@@ -498,6 +498,58 @@ function saveActive(){ try{ localStorage.setItem(LS_ACTIVE, JSON.stringify(pbAct
 function clearActive(){ pbActive=null; saveActive(); }
 loadActive();
 
+/* =========================================================
+   SIGNAL LOCK (prevents multiple leads/entries within 10 candles)
+   - Locks both "heads-up" and strict "(10m)" entries.
+   - Stored by candle time to avoid drift.
+========================================================= */
+const LS_SIGNAL_LOCK = "btc_signal_lock_10c_v1";
+let signalLock = null; // { type:"LEAD"|"ENTRY", dir:"UP"|"DOWN", startTime, startClose }
+function loadSignalLock(){
+  try{ signalLock = JSON.parse(localStorage.getItem(LS_SIGNAL_LOCK) || "null"); }
+  catch{ signalLock = null; }
+}
+function saveSignalLock(){
+  try{ localStorage.setItem(LS_SIGNAL_LOCK, JSON.stringify(signalLock)); }catch{}
+}
+function clearSignalLock(){ signalLock = null; saveSignalLock(); }
+loadSignalLock();
+
+function isSignalLocked(){
+  if (!signalLock?.startTime) return false;
+  const sIdx = findIdxByTime(signalLock.startTime);
+  if (sIdx < 0) { clearSignalLock(); return false; }
+  const eIdx = sIdx + 10;
+  if (eIdx < candles.length && candles[eIdx]?.closed) { clearSignalLock(); return false; }
+  return true;
+}
+
+function maybeRecordSignal(setupText){
+  // setupText examples: "UP heads-up", "DOWN heads-up", "UP(10m)", "DOWN(10m)", "WAIT"
+  if (!setupText || setupText === "WAIT") return;
+  if (isSignalLocked()) return;
+
+  const n = candles.length;
+  if (n < 2) return;
+  const c = candles[n-1];
+  if (!c?.closed) return;
+
+  const isEntry = /\(10m\)/.test(setupText);
+  const isLead  = /heads-up/i.test(setupText);
+  if (!isEntry && !isLead) return;
+
+  const dir = setupText.startsWith("UP") ? "UP" : setupText.startsWith("DOWN") ? "DOWN" : "";
+  if (!dir) return;
+
+  signalLock = {
+    type: isEntry ? "ENTRY" : "LEAD",
+    dir,
+    startTime: c.time,
+    startClose: c.close
+  };
+  saveSignalLock();
+}
+
 function findIdxByTime(t){
   for (let i=candles.length-1;i>=0;i--) if (candles[i]?.time===t) return i;
   return -1;
@@ -574,6 +626,9 @@ let EARLY_STAGE = "—"; // "—" | "HEADS_UP" | "CONFIRM" | "ENTRY"
 let EARLY_DIR = "—";   // UP / DOWN
 
 function computeTrendAndSetup(){
+  // Keep lock state accurate even if this runs on an interval.
+  resolveSignalLock();
+
   const n=candles.length;
   if (n<60 || emaFast.length!==n || emaSlow.length!==n){
     trendEl.textContent="—";
@@ -703,6 +758,20 @@ function computeTrendAndSetup(){
       setup = confirm ? ((trend==="UP") ? "UP(10m)" : "DOWN(10m)") : ((trend==="UP") ? "UP heads-up" : "DOWN heads-up");
     } else {
       setup="WAIT";
+    }
+  }
+
+  // Prevent multiple leads/entries for 10 closed candles after the first signal.
+  // This fixes "EARLY doesn't work" cases where the dashboard keeps emitting repeated leads.
+  // If locked, we still display trend/score but we suppress new leads/entries.
+  if (signalLock && signalLock.startTime){
+    if (setup !== "WAIT") setup = "WAIT";
+  } else {
+    const isEntry = setup.endsWith("(10m)");
+    const isLead = setup.includes("heads-up");
+    if (isEntry || isLead){
+      const dir = setup.startsWith("UP") ? "UP" : setup.startsWith("DOWN") ? "DOWN" : "";
+      if (dir) startSignalLock(dir, i, isEntry);
     }
   }
 
@@ -957,6 +1026,36 @@ function drawManualOverlay(ctx, viewStart, viewEnd, pxPerBar, yFn, W, H){
   }
 }
 
+function drawSignalOverlay(ctx, viewStart, viewEnd, pxPerBar, yFn, H){
+  // Prefer active lock (current signal), otherwise show last signal in history.
+  resolveSignalLock();
+  const sig = (signalLock && signalLock.startTime)
+    ? signalLock
+    : (signalHistory.length ? signalHistory[signalHistory.length - 1] : null);
+  if (!sig || !sig.startTime) return;
+
+  const idx = findIdxByTime(sig.startTime);
+  if (idx < 0 || idx < viewStart || idx > viewEnd) return;
+  const c = candles[idx];
+  if (!c) return;
+
+  const isUp = sig.dir === "UP";
+  const col = isUp ? "rgba(34,197,94,0.95)" : "rgba(239,68,68,0.95)";
+  const glyph = isUp ? "▲" : "▼";
+  const safeY = (yy) => Math.max(10, Math.min(H - 10, yy));
+
+  const x0 = (idx - viewStart) * pxPerBar + 6;
+  const yAnchor = isUp ? yFn(c.low) : yFn(c.high);
+  const y0 = safeY(isUp ? (yAnchor + 22) : (yAnchor - 44));
+
+  ctx.font = "18px system-ui";
+  ctx.fillStyle = col;
+  ctx.fillText(glyph, x0, y0 + 18);
+
+  const lbl = sig.isEntry ? "ENTRY" : "LEAD";
+  drawLabelBox(ctx, x0 + 18, y0 + 2, lbl, col);
+}
+
 chart.draw = function(){
   const ctx=chart.ctx;
   const W=chart.cv.getBoundingClientRect().width;
@@ -1024,6 +1123,9 @@ chart.draw = function(){
     if (t.endIdx<start || t.startIdx>end) continue;
     drawOneTrade(ctx,t,start,end,pxPerBar,yFn,H);
   }
+
+  // Signal marker (lead/entry) — locked for 10 candles after firing
+  drawSignalOverlay(ctx, start, end, pxPerBar, yFn, H);
 
   // manual overlay on top
   drawManualOverlay(ctx, start, end, pxPerBar, yFn, W, H);
